@@ -194,7 +194,7 @@ single_profile_checkbox.grid(row=1, column=0, columnspan=1, rowspan=1, padx=10, 
 single_profile_checkbox.configure(background="#434547", foreground="white", activebackground="#434547",
                                       activeforeground="white", selectcolor="#434547",
                                       font=("Helvetica", 11))
-single_profile.set('')
+single_profile.set('--force-single-profile ')
 
 
 # ------------------------------------------------------------------------------------------------------ Single Profile
