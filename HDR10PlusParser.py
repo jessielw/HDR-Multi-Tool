@@ -143,7 +143,7 @@ def drop_input(event):
     input_dnd.set(event.data)
 
 def update_file_input(*args):
-    global VideoInput, autofilesave_dir_path, VideoInputQuoted, VideoOutput
+    global VideoInput, autofilesave_dir_path, VideoInputQuoted, VideoOutput, autosavefilename
     input_entry.configure(state=NORMAL)
     input_entry.delete(0, END)
     VideoInput = str(input_dnd.get()).replace("{", "").replace("}", "")
@@ -155,6 +155,7 @@ def update_file_input(*args):
         input_entry.insert(0, str(input_dnd.get()).replace("{", "").replace("}", ""))
         filename = pathlib.Path(VideoInput)
         VideoOut = filename.with_suffix('.json')
+        autosavefilename = VideoOut.name
         VideoOutput = str(VideoOut)
         input_entry.configure(state=DISABLED)
         output_entry.configure(state=NORMAL)
@@ -205,7 +206,12 @@ def start_job():
     if pathlib.Path(VideoInput).suffix == '.hevc':
         finalcommand = '"' + hdr10plus_parser + ' -i ' + VideoInputQuoted + ' ' + single_profile.get() + '-o ' \
                        + VideoOutputQuoted + '"'
-    elif pathlib.Path(VideoInput).suffix != '.hevc':
+    elif pathlib.Path(VideoInput).suffix != '.hevc' and shell_options.get() == "Default":
+        finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
+                       + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb \
+                       -f hevc - -hide_banner -loglevel warning -stats|' \
+                       + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
+    elif pathlib.Path(VideoInput).suffix != '.hevc' and shell_options.get() == "Debug":
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                        + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb -f hevc - |' \
                        + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
