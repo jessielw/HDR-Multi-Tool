@@ -1,0 +1,5 @@
+.idea/
+build/
+dist/
+__pycache__/
+HDR10PlusParser.spec
