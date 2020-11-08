@@ -4,41 +4,54 @@ from tkinter import filedialog, StringVar
 import subprocess
 import tkinter as tk
 import pathlib
-import tkinter.scrolledtext as scrolledtextwidget
 from TkinterDnD2 import *
 from tkinter import messagebox
+import shutil
+import threading
+from tkinter import ttk
+from Packages.about import openaboutwindow
 
 # Main Gui & Windows --------------------------------------------------------
-root = TkinterDnD.Tk()
-root.title("HDR10+ Parser Tool v1.0")
+def root_exit_function():  # Asks if user wants to close main GUI + close all tasks
+    confirm_exit = messagebox.askyesno(title='Prompt', message="Are you sure you want to exit the program?\nThis "
+                                                               "will end all current taks.",
+                                       parent=root)
+    if confirm_exit == False:
+        pass
+    elif confirm_exit == True:
+        try:
+            subprocess.Popen(f"TASKKILL /F /im HDR10PlusParser.exe /T", creationflags=subprocess.CREATE_NO_WINDOW)
+            root.destroy()
+        except:
+            root.destroy()
+
+root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
+root.title("HDR10+ Parser Tool v1.2")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
-window_height = 270
+window_height = 300
 window_width = 600
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-x_cordinate = int((screen_width / 2) - (window_width / 2))
-y_cordinate = int((screen_height / 2) - (window_height / 2))
-root.geometry("{}x{}+{}+{}".format(window_width, window_height, x_cordinate, y_cordinate))
+x_coordinate = int((screen_width / 2) - (window_width / 2))
+y_coordinate = int((screen_height / 2) - (window_height / 2))
+root.geometry("{}x{}+{}+{}".format(window_width, window_height, x_coordinate, y_coordinate))
+root.protocol('WM_DELETE_WINDOW', root_exit_function)
 
-root.grid_columnconfigure(0, weight=1)
-root.grid_columnconfigure(1, weight=1)
-root.grid_columnconfigure(2, weight=1)
-root.grid_columnconfigure(3, weight=1)
-root.grid_rowconfigure(0, weight=1)
-root.grid_rowconfigure(1, weight=1)
-root.grid_rowconfigure(2, weight=1)
-
+for n in range(4):
+    root.grid_columnconfigure(n, weight=1)
+for n in range(3):
+    root.grid_rowconfigure(n, weight=1)
 
 # Bundled Apps --------------------------------------------------------------------------------------------------------
-ffmpeg = '"Apps/FFMPEG/ffmpeg.exe"'
+if shutil.which('ffmpeg') != None:
+    ffmpeg = str(pathlib.Path(shutil.which('ffmpeg')))
+elif shutil.which('ffmpeg') == None:
+    ffmpeg = str(pathlib.Path("Apps/FFMPEG/ffmpeg.exe"))  # Checks if FFMPEG is located on Windows PATH
 hdr10plus_parser = '"Apps/HDR10PlusParser/hdr10plus_parser.exe"'
+mediainfocli = '"Apps/MediaInfoCLI/MediaInfo.exe"'
 
 # -------------------------------------------------------------------------------------------------------- Bundled Apps
-
-def openaboutwindow():
-    pass
-
 
 # Menu Items and Sub-Bars ---------------------------------------------------------------------------------------------
 my_menu_bar = Menu(root, tearoff=0)
@@ -77,6 +90,17 @@ input_frame.columnconfigure(1, weight=1)
 
 # -------------------------------------------------------------------------------------------- Video Frame
 
+# Options Frame -------------------------------------------------------------------------------------------
+options_frame = LabelFrame(root, text=' Options ')
+options_frame.grid(row=1, columnspan=4, sticky=E + W + N + S, padx=20, pady=(10,10))
+options_frame.configure(fg="white", bg="#434547", bd=3)
+
+options_frame.rowconfigure(1, weight=1)
+options_frame.columnconfigure(0, weight=1)
+options_frame.columnconfigure(1, weight=1)
+
+# -------------------------------------------------------------------------------------------- Options Frame
+
 # Output Frame -------------------------------------------------------------------------------------------
 output_frame = LabelFrame(root, text=' Output ')
 output_frame.grid(row=2, columnspan=4, sticky=E + W + N + S, padx=20, pady=(10,10))
@@ -100,7 +124,7 @@ def input_button_commands():
     input_entry.configure(state=NORMAL)
     input_entry.delete(0, END)
     file_extension = pathlib.Path(VideoInput).suffix
-    supported_extensions = ['.mkv', '.mp4', '.hevc', '.ts']
+    supported_extensions = ['.mkv', '.mp4', '.ts', '.hevc']
     if VideoInput:
         if file_extension in supported_extensions:
             autofilesave_file_path = pathlib.Path(VideoInput)  # Command to get file input location
@@ -187,15 +211,13 @@ def file_save():
 
 # Single Profile ------------------------------------------------------------------------------------------------------
 single_profile = StringVar()
-single_profile_checkbox = Checkbutton(root, text='Force Single Profile',
+single_profile_checkbox = Checkbutton(options_frame, text='Force Single Profile',
                                           variable=single_profile, onvalue='--force-single-profile ', offvalue='')
-single_profile_checkbox.grid(row=1, column=0, columnspan=1, rowspan=1, padx=10, pady=(0, 0),
-                                 sticky=N + S + E + W)
+single_profile_checkbox.grid(row=0, column=0, columnspan=1, rowspan=1, padx=10, pady=(0, 0), sticky=N + S + W)
 single_profile_checkbox.configure(background="#434547", foreground="white", activebackground="#434547",
                                       activeforeground="white", selectcolor="#434547",
                                       font=("Helvetica", 11))
 single_profile.set('--force-single-profile ')
-
 
 # ------------------------------------------------------------------------------------------------------ Single Profile
 
@@ -203,20 +225,81 @@ single_profile.set('--force-single-profile ')
 # Start Job -----------------------------------------------------------------------------------------------------------
 def start_job():
     VideoOutputQuoted = '"' + VideoOutput + '"'
-    if pathlib.Path(VideoInput).suffix == '.hevc':
-        finalcommand = '"' + hdr10plus_parser + ' -i ' + VideoInputQuoted + ' ' + single_profile.get() + '-o ' \
-                       + VideoOutputQuoted + '"'
-    elif pathlib.Path(VideoInput).suffix != '.hevc' and shell_options.get() == "Default":
+
+    if shell_options.get() == "Default":
+        global total_duration
+        mediainfocli_cmd = '"' + mediainfocli + " " + '--Inform="General;%FileSize%"' \
+                       + " " + VideoInputQuoted + '"'
+
+        try:
+            mediainfo_duration = subprocess.Popen('cmd /c ' + mediainfocli_cmd, creationflags=subprocess.CREATE_NO_WINDOW,
+                                                  universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                                  stdin=subprocess.PIPE)
+            stdout, stderr = mediainfo_duration.communicate()
+            math = int(stdout) / 1000
+            split = str(math)
+            total_duration = split.rsplit('.', 1)[0]
+        except:
+            pass
+
+        def close_encode():
+            confirm_exit = messagebox.askyesno(title='Prompt',
+                                               message="Are you sure you want to stop the parser?", parent=window)
+            if confirm_exit == False:
+                pass
+            elif confirm_exit == True:
+                try:
+                    subprocess.Popen(f"TASKKILL /F /PID {job.pid} /T", creationflags=subprocess.CREATE_NO_WINDOW)
+                    window.destroy()
+                except:
+                    window.destroy()
+
+        def close_window():
+            threading.Thread(target=close_encode).start()
+
+        window = tk.Toplevel(root)
+        window.title(str(pathlib.Path(VideoInput).stem))
+        window.configure(background="#434547")
+        encode_label = Label(window, text= '- ' * 20 + 'Progress' + ' -' * 20,
+                             font=("Times New Roman", 14), background='#434547', foreground="white")
+        encode_label.grid(column=0, row=0)
+        window.grid_columnconfigure(0, weight=1)
+        window.grid_rowconfigure(0, weight=1)
+        window.grid_rowconfigure(1, weight=1)
+        window.protocol('WM_DELETE_WINDOW', close_window)
+        encode_window_progress = Text(window, width=65, height=2, relief=SUNKEN, bd=3)
+        encode_window_progress.grid(row=1, column=0, pady=(10, 6), padx=10)
+        encode_window_progress.insert(END, '')
+        app_progress_bar = ttk.Progressbar(window, orient=HORIZONTAL, length=580, mode='determinate')
+        app_progress_bar.grid(row=2, pady=(10, 10))
+
+    if shell_options.get() == "Default":
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                        + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb \
                        -f hevc - -hide_banner -loglevel warning -stats|' \
                        + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
-    elif pathlib.Path(VideoInput).suffix != '.hevc' and shell_options.get() == "Debug":
+    elif shell_options.get() == "Debug":
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                        + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb -f hevc - |' \
                        + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
     if shell_options.get() == "Default":
-        subprocess.Popen('cmd /c ' + finalcommand)
+        job = subprocess.Popen('cmd /c ' + finalcommand, universal_newlines=True,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                         creationflags=subprocess.CREATE_NO_WINDOW)
+        for line in job.stdout:
+            try:
+                encode_window_progress.delete('1.0', END)
+                encode_window_progress.insert(END, 'Starting Job...')
+                if line.split('=', 1)[0] == 'frame':
+                    encode_window_progress.delete('1.0', END)
+                    encode_window_progress.insert(END, line)
+                    size = line.split('size=', 1)[1].split()[0].rsplit('k', 1)[0]
+                    percent = '{:.1%}'.format(int(size) / int(total_duration)).split('.', 1)[0]
+                    app_progress_bar['value'] = percent
+            except:
+                encode_window_progress.delete('1.0', END)
+                encode_window_progress.insert(END, line)
+        window.destroy()
     elif shell_options.get() == "Debug":
         subprocess.Popen('cmd /k ' + finalcommand)
 # --------------------------------------------------------------------------------------------------------------- Start
@@ -268,8 +351,8 @@ def start_button_hover(e):
 def start_button_hover_leave(e):
     start_button["bg"] = "#23272A"
 
-start_button = Button(root, text="Start Job", command=start_job, state=DISABLED, foreground="white",
-                       background="#23272A", borderwidth="3", width=15)
+start_button = Button(root, text="Start Job", command=lambda:threading.Thread(target=start_job).start(),
+                      state=DISABLED, foreground="white", background="#23272A", borderwidth="3", width=15)
 start_button.grid(row=3, column=3, columnspan=1, padx=20, pady=5, sticky=E+N+S)
 start_button.bind("<Enter>", start_button_hover)
 start_button.bind("<Leave>", start_button_hover_leave)
