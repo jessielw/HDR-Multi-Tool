@@ -45,7 +45,7 @@ for n in range(3):
 
 # Bundled Apps --------------------------------------------------------------------------------------------------------
 if shutil.which('ffmpeg') != None:
-    ffmpeg = str(pathlib.Path(shutil.which('ffmpeg')))
+    ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))) + '"'
 elif shutil.which('ffmpeg') == None:
     ffmpeg = str(pathlib.Path("Apps/FFMPEG/ffmpeg.exe"))  # Checks if FFMPEG is located on Windows PATH
 hdr10plus_parser = '"Apps/HDR10PlusParser/hdr10plus_parser.exe"'
@@ -117,9 +117,7 @@ output_frame.columnconfigure(1, weight=1)
 def input_button_commands():
     global VideoInput, autosavefilename, autofilesave_dir_path, VideoInputQuoted, VideoOutput
     VideoInput = filedialog.askopenfilename(initialdir="/", title="Select A File",
-                                            filetypes=((
-                                                           "MKV, MP4, HEVC, TS",
-                                                           "*.mkv *.mp4 *.hevc *.ts"),
+                                            filetypes=(("MKV, MP4, HEVC, TS", "*.mkv *.mp4 *.hevc *.ts"),
                                                        ("All Files", "*.*")))
     input_entry.configure(state=NORMAL)
     input_entry.delete(0, END)
@@ -267,11 +265,12 @@ def start_job():
         window.grid_rowconfigure(0, weight=1)
         window.grid_rowconfigure(1, weight=1)
         window.protocol('WM_DELETE_WINDOW', close_window)
-        encode_window_progress = Text(window, width=65, height=2, relief=SUNKEN, bd=3)
-        encode_window_progress.grid(row=1, column=0, pady=(10, 6), padx=10)
+        window.geometry("600x140")
+        encode_window_progress = Text(window, height=2, relief=SUNKEN, bd=3)
+        encode_window_progress.grid(row=1, column=0, pady=(10, 6), padx=10, sticky=E + W)
         encode_window_progress.insert(END, '')
-        app_progress_bar = ttk.Progressbar(window, orient=HORIZONTAL, length=580, mode='determinate')
-        app_progress_bar.grid(row=2, pady=(10, 10))
+        app_progress_bar = ttk.Progressbar(window, orient=HORIZONTAL, mode='determinate')
+        app_progress_bar.grid(row=2, pady=(10, 10), padx=15, sticky=E + W)
 
     if shell_options.get() == "Default":
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
