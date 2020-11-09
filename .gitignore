@@ -2,5 +2,5 @@
 build/
 dist/
 __pycache__/
-Apps
+Apps/
 HDR10PlusParser.spec

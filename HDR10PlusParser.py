@@ -26,7 +26,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
             root.destroy()
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR10+ Parser Tool v1.2")
+root.title("HDR10+ Parser Tool v1.21")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 300
@@ -307,13 +307,14 @@ def start_job():
 
 
 # Buttons -------------------------------------------------------------------------------------------------------------
+# Input Button --------------------------------------
 def input_button_hover(e):
     input_button["bg"] = "grey"
 
 def input_button_hover_leave(e):
     input_button["bg"] = "#23272A"
 
-
+# Drag and Drop Function for Input Button
 input_dnd = StringVar()
 input_dnd.trace('w', update_file_input)
 input_button = tk.Button(input_frame, text="Open File", command=input_button_commands, foreground="white",
@@ -330,6 +331,7 @@ input_entry.drop_target_register(DND_FILES)
 input_entry.dnd_bind('<<Drop>>', drop_input)
 
 
+# Output Button --------------------------------------
 def output_button_hover(e):
     output_button["bg"] = "grey"
 
@@ -344,7 +346,7 @@ output_entry.grid(row=0, column=1, columnspan=3, padx=5, pady=5, sticky=S + E + 
 output_button.bind("<Enter>", output_button_hover)
 output_button.bind("<Leave>", output_button_hover_leave)\
 
-
+# Start Button ------------------------------------------
 def start_button_hover(e):
     start_button["bg"] = "grey"
 
