@@ -10,6 +10,7 @@ import shutil
 import threading
 from tkinter import ttk
 from Packages.about import openaboutwindow
+from configparser import ConfigParser
 
 # Main Gui & Windows --------------------------------------------------------
 def root_exit_function():  # Asks if user wants to close main GUI + close all tasks
@@ -44,12 +45,81 @@ for n in range(3):
     root.grid_rowconfigure(n, weight=1)
 
 # Bundled Apps --------------------------------------------------------------------------------------------------------
-if shutil.which('ffmpeg') != None:
-    ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))) + '"'
-elif shutil.which('ffmpeg') == None:
-    ffmpeg = str(pathlib.Path("Apps/FFMPEG/ffmpeg.exe"))  # Checks if FFMPEG is located on Windows PATH
-hdr10plus_parser = '"Apps/HDR10PlusParser/hdr10plus_parser.exe"'
+config_file = 'Runtime/config.ini'  # Creates (if doesn't exist) and defines location of config.ini
+config = ConfigParser()
+config.read(config_file)
+
+try:  # Create config parameters
+    config.add_section('ffmpeg_path')
+    config.set('ffmpeg_path', 'path', '')
+    config.add_section('parser_path')
+    config.set('parser_path', 'path', '')  # First is section, second is key, and third is the value
+    with open(config_file, 'w') as configfile:
+        config.write(configfile)
+except:
+    pass
+
+# Bundled app path(s) -------------------------------
+ffmpeg = config['ffmpeg_path']['path']
+hdr10plus_parser = config['parser_path']['path']
 mediainfocli = '"Apps/MediaInfoCLI/MediaInfo.exe"'
+# Bundled app path(s) -------------------------------
+
+def check_ffmpeg():
+    global ffmpeg
+    # FFMPEG --------------------------------------------------------------
+    if shutil.which('ffmpeg') != None:
+        ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))).lower() + '"'
+        messagebox.showinfo(title='Prompt!', message='ffmpeg.exe found on system PATH, '
+                                                     'automatically setting path to location.\n\n'
+                                                     '             Note: This can be changed in the config.ini file')
+        rem_ffmpeg = messagebox.askyesno(title='Delete Included ffmpeg?',
+                                         message='Would you like to delete the included FFMPEG?')
+        if rem_ffmpeg == True:
+            shutil.rmtree(str(pathlib.Path("Apps/ffmpeg")))
+        try:
+            config.set('ffmpeg_path', 'path', ffmpeg)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+        except:
+            pass
+    elif ffmpeg == '' and shutil.which('ffmpeg') == None:
+        messagebox.showinfo(title='Info', message='Program will use the included '
+                                                  '"ffmpeg.exe" located in the "Apps" folder')
+        ffmpeg = '"' + str(pathlib.Path("Apps/ffmpeg/ffmpeg.exe")) + '"'
+        try:
+            config.set('ffmpeg_path', 'path', ffmpeg)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+        except:
+            pass
+    # FFMPEG ------------------------------------------------------------------
+def check_hdr10plus_parser():
+    global hdr10plus_parser
+    # HDR10plus_parser --------------------------------------------------------
+    if shutil.which('hdr10plus_parser') != None:
+        hdr10plus_parser = '"' + str(pathlib.Path(shutil.which('hdr10plus_parser'))).lower() + '"'
+        messagebox.showinfo(title='Prompt!', message='hdr10plus_parser.exe found on system PATH, '
+                                                     'automatically setting path to location.\n\n'
+                                                     '             This can be changed in the config.ini file')
+        try:
+            config.set('parser_path', 'path', hdr10plus_parser)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+        except:
+            pass
+    elif hdr10plus_parser == '' and shutil.which('hdr10plus_parser') == None:
+            messagebox.showinfo(title='Info', message='Program will use the included '
+                                                      '"hdr10plus_parser.exe" located in the "Apps" folder')
+            hdr10plus_parser = '"' + str(pathlib.Path('Apps/HDR10PlusParser/hdr10plus_parser.exe')) + '"'
+            try:
+                config.set('parser_path', 'path', hdr10plus_parser)
+                with open(config_file, 'w') as configfile:
+                    config.write(configfile)
+            except:
+                pass
+    # HDR10plus_parser --------------------------------------------------------
+
 
 # -------------------------------------------------------------------------------------------------------- Bundled Apps
 
@@ -70,6 +140,45 @@ shell_options = StringVar()
 shell_options.set('Default')
 options_submenu.add_radiobutton(label='Shell Closes Automatically', variable=shell_options, value="Default")
 options_submenu.add_radiobutton(label='Shell Stays Open (Debug)', variable=shell_options, value="Debug")
+
+def set_ffmpeg_path():
+    global ffmpeg
+    path = filedialog.askopenfilename(title='Select Location to "ffmpeg.exe"', initialdir='/',
+                                      filetypes=[('ffmpeg', 'ffmpeg.exe')])
+    ffmpeg = '"' + str(pathlib.Path(path)) + '"'
+    config.set('ffmpeg_path', 'path', ffmpeg)
+    with open(config_file, 'w') as configfile:
+        config.write(configfile)
+
+options_menu.add_command(label='Set "ffmpeg.exe" path', command=set_ffmpeg_path)
+
+def set_hdr10plus_parser_path():
+    global hdr10plus_parser
+    path = filedialog.askopenfilename(title='Select Location to "hdr10plus_parser.exe"', initialdir='/',
+                                      filetypes=[('hdr10plus_parser', 'hdr10plus_parser.exe')])
+    hdr10plus_parser = '"' + str(pathlib.Path(path)) + '"'
+    config.set('parser_path', 'path', hdr10plus_parser)
+    with open(config_file, 'w') as configfile:
+        config.write(configfile)
+
+options_menu.add_command(label='Set "hdr10plus_parser.exe" path', command=set_hdr10plus_parser_path)
+
+def reset_config():
+    msg = messagebox.askyesno(title='Warning', message='Are you sure you want to reset the config.ini file settings?')
+    if msg == False:
+       pass
+    if msg == True:
+        try:
+            config.set('ffmpeg_path', 'path', '')
+            config.set('parser_path', 'path', '')
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+            messagebox.showinfo(title='Prompt', message='Please restart the program')
+        except:
+            pass
+        root.destroy()
+
+options_menu.add_command(label='Reset Configuration File', command=reset_config)
 
 help_menu = Menu(my_menu_bar, tearoff=0, activebackground="dim grey")
 my_menu_bar.add_cascade(label="Help", menu=help_menu)
@@ -360,5 +469,11 @@ start_button.bind("<Leave>", start_button_hover_leave)
 
 # ------------------------------------------------------------------------------------------------------------- Buttons
 
+# Checks config for bundled app paths path ---------------
+if config['ffmpeg_path']['path'] == '':
+    check_ffmpeg()
+if config['parser_path']['path'] == '':
+    check_hdr10plus_parser()
+# Checks config for bundled app paths path ---------------
 # End Loop ------------------------------------------------------------------------------------------------------------
 root.mainloop()
