@@ -27,7 +27,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
             root.destroy()
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR10+ Parser Tool v1.21")
+root.title("HDR10+ Parser Tool v1.22")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 300
@@ -54,6 +54,8 @@ try:  # Create config parameters
     config.set('ffmpeg_path', 'path', '')
     config.add_section('parser_path')
     config.set('parser_path', 'path', '')  # First is section, second is key, and third is the value
+    config.add_section('mediainfocli_path')
+    config.set('mediainfocli_path', 'path', '')
     with open(config_file, 'w') as configfile:
         config.write(configfile)
 except:
@@ -62,7 +64,7 @@ except:
 # Bundled app path(s) -------------------------------
 ffmpeg = config['ffmpeg_path']['path']
 hdr10plus_parser = config['parser_path']['path']
-mediainfocli = '"Apps/MediaInfoCLI/MediaInfo.exe"'
+mediainfocli = config['mediainfocli_path']['path']
 # Bundled app path(s) -------------------------------
 
 def check_ffmpeg():
@@ -72,7 +74,7 @@ def check_ffmpeg():
         ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))).lower() + '"'
         messagebox.showinfo(title='Prompt!', message='ffmpeg.exe found on system PATH, '
                                                      'automatically setting path to location.\n\n'
-                                                     '             Note: This can be changed in the config.ini file')
+                                                     '           Note: This can be changed in the config.ini file')
         rem_ffmpeg = messagebox.askyesno(title='Delete Included ffmpeg?',
                                          message='Would you like to delete the included FFMPEG?')
         if rem_ffmpeg == True:
@@ -94,6 +96,7 @@ def check_ffmpeg():
         except:
             pass
     # FFMPEG ------------------------------------------------------------------
+
 def check_hdr10plus_parser():
     global hdr10plus_parser
     # HDR10plus_parser --------------------------------------------------------
@@ -101,7 +104,11 @@ def check_hdr10plus_parser():
         hdr10plus_parser = '"' + str(pathlib.Path(shutil.which('hdr10plus_parser'))).lower() + '"'
         messagebox.showinfo(title='Prompt!', message='hdr10plus_parser.exe found on system PATH, '
                                                      'automatically setting path to location.\n\n'
-                                                     '             This can be changed in the config.ini file')
+                                                     '           Note: This can be changed in the config.ini file')
+        rem_hdr10plus_parser = messagebox.askyesno(title='Delete Included hdr10plus.exe?',
+                                         message='Would you like to delete the included hdr10plus.exe?')
+        if rem_hdr10plus_parser == True:
+            shutil.rmtree(str(pathlib.Path("Apps/HDR10PlusParser")))
         try:
             config.set('parser_path', 'path', hdr10plus_parser)
             with open(config_file, 'w') as configfile:
@@ -119,6 +126,36 @@ def check_hdr10plus_parser():
             except:
                 pass
     # HDR10plus_parser --------------------------------------------------------
+
+def check_mediainfocli():
+    global mediainfocli
+    # mediainfocli -------------------------------------------------------------
+    if shutil.which('MediaInfo') != None:
+        mediainfocli = '"' + str(pathlib.Path(shutil.which('MediaInfo'))).lower() + '"'
+        messagebox.showinfo(title='Prompt!', message='MediaInfo.exe found on system PATH, '
+                                                     'automatically setting path to location.\n\n'
+                                                     '         Note: This can be changed in the config.ini file')
+        rem_mediainfocli = messagebox.askyesno(title='Delete Included MediaInfo?',
+                                         message='Would you like to delete the included MediaInfo?')
+        if rem_mediainfocli == True:
+            shutil.rmtree(str(pathlib.Path("Apps/MediaInfoCLI")))
+        try:
+            config.set('mediainfocli_path', 'path', mediainfocli)
+            with open(config_file, 'w') as configfile:
+                config.write(configfile)
+        except:
+            pass
+    elif mediainfocli == '' and shutil.which('MediaInfo') == None:
+            messagebox.showinfo(title='Info', message='Program will use the included '
+                                                      '"MediaInfo.exe" located in the "Apps" folder')
+            mediainfocli = '"' + str(pathlib.Path('Apps/MediaInfoCLI/MediaInfo.exe')) + '"'
+            try:
+                config.set('mediainfocli_path', 'path', mediainfocli)
+                with open(config_file, 'w') as configfile:
+                    config.write(configfile)
+            except:
+                pass
+    # mediainfocli ----------------------------------------------------------
 
 
 # -------------------------------------------------------------------------------------------------------- Bundled Apps
@@ -170,6 +207,20 @@ def set_hdr10plus_parser_path():
 
 options_menu.add_command(label='Set "hdr10plus_parser.exe" path', command=set_hdr10plus_parser_path)
 
+def set_mediainfocli_path():
+    global mediainfocli
+    path = filedialog.askopenfilename(title='Select Location to "MediaInfo.exe"', initialdir='/',
+                                      filetypes=[('MediaInfo', 'MediaInfo.exe')])
+    if path == '':
+        pass
+    elif path != '':
+        mediainfocli = '"' + str(pathlib.Path(path)) + '"'
+        config.set('mediainfocli_path', 'path', mediainfocli)
+        with open(config_file, 'w') as configfile:
+            config.write(configfile)
+
+options_menu.add_command(label='Set "MediaInfo.exe" path', command=set_mediainfocli_path)
+
 options_menu.add_separator()
 def reset_config():
     msg = messagebox.askyesno(title='Warning', message='Are you sure you want to reset the config.ini file settings?')
@@ -179,6 +230,7 @@ def reset_config():
         try:
             config.set('ffmpeg_path', 'path', '')
             config.set('parser_path', 'path', '')
+            config.set('mediainfocli_path', 'path', '')
             with open(config_file, 'w') as configfile:
                 config.write(configfile)
             messagebox.showinfo(title='Prompt', message='Please restart the program')
@@ -482,6 +534,8 @@ if config['ffmpeg_path']['path'] == '':
     check_ffmpeg()
 if config['parser_path']['path'] == '':
     check_hdr10plus_parser()
+if config['mediainfocli_path']['path'] == '':
+    check_mediainfocli()
 # Checks config for bundled app paths path ---------------
 # End Loop ------------------------------------------------------------------------------------------------------------
 root.mainloop()
