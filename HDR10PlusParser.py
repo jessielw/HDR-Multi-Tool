@@ -145,10 +145,14 @@ def set_ffmpeg_path():
     global ffmpeg
     path = filedialog.askopenfilename(title='Select Location to "ffmpeg.exe"', initialdir='/',
                                       filetypes=[('ffmpeg', 'ffmpeg.exe')])
-    ffmpeg = '"' + str(pathlib.Path(path)) + '"'
-    config.set('ffmpeg_path', 'path', ffmpeg)
-    with open(config_file, 'w') as configfile:
-        config.write(configfile)
+    if path == '':
+        pass
+    elif path != '':
+        ffmpeg = '"' + str(pathlib.Path(path)) + '"'
+        config.set('ffmpeg_path', 'path', ffmpeg)
+        with open(config_file, 'w') as configfile:
+            config.write(configfile)
+    print(path)
 
 options_menu.add_command(label='Set "ffmpeg.exe" path', command=set_ffmpeg_path)
 
@@ -156,10 +160,13 @@ def set_hdr10plus_parser_path():
     global hdr10plus_parser
     path = filedialog.askopenfilename(title='Select Location to "hdr10plus_parser.exe"', initialdir='/',
                                       filetypes=[('hdr10plus_parser', 'hdr10plus_parser.exe')])
-    hdr10plus_parser = '"' + str(pathlib.Path(path)) + '"'
-    config.set('parser_path', 'path', hdr10plus_parser)
-    with open(config_file, 'w') as configfile:
-        config.write(configfile)
+    if path == '':
+        pass
+    elif path != '':
+        hdr10plus_parser = '"' + str(pathlib.Path(path)) + '"'
+        config.set('parser_path', 'path', hdr10plus_parser)
+        with open(config_file, 'w') as configfile:
+            config.write(configfile)
 
 options_menu.add_command(label='Set "hdr10plus_parser.exe" path', command=set_hdr10plus_parser_path)
 
