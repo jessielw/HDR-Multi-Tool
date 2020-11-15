@@ -170,6 +170,7 @@ def set_hdr10plus_parser_path():
 
 options_menu.add_command(label='Set "hdr10plus_parser.exe" path', command=set_hdr10plus_parser_path)
 
+options_menu.add_separator()
 def reset_config():
     msg = messagebox.askyesno(title='Warning', message='Are you sure you want to reset the config.ini file settings?')
     if msg == False:
