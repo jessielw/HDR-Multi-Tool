@@ -27,10 +27,10 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
             root.destroy()
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR10+ Parser Tool v1.22")
+root.title("Parser Tool v1.23")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
-root.configure(background="#434547")
-window_height = 300
+root.configure(background="#93A58E")
+window_height = 380
 window_width = 600
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -39,9 +39,9 @@ y_coordinate = int((screen_height / 2) - (window_height / 2))
 root.geometry("{}x{}+{}+{}".format(window_width, window_height, x_coordinate, y_coordinate))
 root.protocol('WM_DELETE_WINDOW', root_exit_function)
 
-for n in range(4):
+for n in range(2):
     root.grid_columnconfigure(n, weight=1)
-for n in range(3):
+for n in range(2):
     root.grid_rowconfigure(n, weight=1)
 
 # Bundled Apps --------------------------------------------------------------------------------------------------------
@@ -247,35 +247,46 @@ help_menu.add_command(label="About", command=openaboutwindow)
 
 # --------------------------------------------------------------------------------------------- Menu Items and Sub-Bars
 
+# Tabs ----------------------------------------------------------------------------------------------------------------
+hdr10parser_notebook = ttk.Notebook(root)
+hdr10parser_notebook.grid(row=0, column=0, columnspan=4, sticky=E + W + N + S, padx=10, pady=(10, 0))
+hdr10parser_frame = Frame(hdr10parser_notebook, background="#434547")
+hdr10parser_notebook.add(hdr10parser_frame, text='HDR10+ Parser')
+for n in range(1):
+    hdr10parser_frame.grid_columnconfigure(n, weight=1)
+for n in range(2):
+    hdr10parser_frame.grid_rowconfigure(n, weight=1)
+# ---------------------------------------------------------------------------------------------------------------- Tabs
+
 # Frames --------------------------------------------------------------------------------------------------------------
 # Video Frame -------------------------------------------------------------------------------------------
-input_frame = LabelFrame(root, text=' Input ')
-input_frame.grid(row=0, columnspan=4, sticky=E + W + N + S, padx=20, pady=(10,10))
+input_frame = LabelFrame(hdr10parser_frame, text=' Input ')
+input_frame.grid(row=0, column=0, columnspan=5, sticky=E + W + N + S, padx=20, pady=(10,10))
 input_frame.configure(fg="white", bg="#434547", bd=3)
 
-input_frame.rowconfigure(1, weight=1)
+input_frame.rowconfigure(0, weight=1)
 input_frame.columnconfigure(0, weight=1)
 input_frame.columnconfigure(1, weight=1)
 
 # -------------------------------------------------------------------------------------------- Video Frame
 
 # Options Frame -------------------------------------------------------------------------------------------
-options_frame = LabelFrame(root, text=' Options ')
-options_frame.grid(row=1, columnspan=4, sticky=E + W + N + S, padx=20, pady=(10,10))
+options_frame = LabelFrame(hdr10parser_frame, text=' Options ')
+options_frame.grid(row=1, column=0, sticky=E + W + N + S, padx=20, pady=(10,10))
 options_frame.configure(fg="white", bg="#434547", bd=3)
 
-options_frame.rowconfigure(1, weight=1)
+options_frame.rowconfigure(0, weight=1)
 options_frame.columnconfigure(0, weight=1)
 options_frame.columnconfigure(1, weight=1)
 
 # -------------------------------------------------------------------------------------------- Options Frame
 
 # Output Frame -------------------------------------------------------------------------------------------
-output_frame = LabelFrame(root, text=' Output ')
-output_frame.grid(row=2, columnspan=4, sticky=E + W + N + S, padx=20, pady=(10,10))
+output_frame = LabelFrame(hdr10parser_frame, text=' Output ')
+output_frame.grid(row=2, column=0, sticky=E + W + N + S, padx=20, pady=(10,10))
 output_frame.configure(fg="white", bg="#434547", bd=3)
 
-output_frame.rowconfigure(1, weight=1)
+output_frame.rowconfigure(0, weight=1)
 output_frame.columnconfigure(0, weight=1)
 output_frame.columnconfigure(1, weight=1)
 
@@ -516,14 +527,14 @@ output_button.bind("<Leave>", output_button_hover_leave)\
 
 # Start Button ------------------------------------------
 def start_button_hover(e):
-    start_button["bg"] = "grey"
+    start_button["bg"] = "#424242"
 
 def start_button_hover_leave(e):
-    start_button["bg"] = "#23272A"
+    start_button["bg"] = "#808080"
 
 start_button = Button(root, text="Start Job", command=lambda:threading.Thread(target=start_job).start(),
-                      state=DISABLED, foreground="white", background="#23272A", borderwidth="3", width=15)
-start_button.grid(row=3, column=3, columnspan=1, padx=20, pady=5, sticky=E+N+S)
+                      state=DISABLED, foreground="white", background="#808080", borderwidth="3", width=15)
+start_button.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky=E+N+S)
 start_button.bind("<Enter>", start_button_hover)
 start_button.bind("<Leave>", start_button_hover_leave)
 
