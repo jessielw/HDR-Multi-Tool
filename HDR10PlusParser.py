@@ -166,7 +166,7 @@ root.config(menu=my_menu_bar)
 
 file_menu = Menu(my_menu_bar, tearoff=0, activebackground='dim grey')
 my_menu_bar.add_cascade(label='File', menu=file_menu)
-file_menu.add_command(label='Exit', command=root.destroy)
+file_menu.add_command(label='Exit', command=root_exit_function)
 
 options_menu = Menu(my_menu_bar, tearoff=0, activebackground='dim grey')
 my_menu_bar.add_cascade(label='Options', menu=options_menu)
