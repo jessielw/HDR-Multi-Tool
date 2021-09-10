@@ -21,16 +21,16 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
         pass
     elif confirm_exit == True:
         try:
-            subprocess.Popen(f"TASKKILL /F /im HDR10PlusParser.exe /T", creationflags=subprocess.CREATE_NO_WINDOW)
+            subprocess.Popen(f"TASKKILL /F /im hdr10plus_tool.exe /T", creationflags=subprocess.CREATE_NO_WINDOW)
             root.destroy()
         except:
             root.destroy()
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("Parser Tool v1.23")
+root.title("hdr10plus Tool Gui v1.24")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
-root.configure(background="#93A58E")
-window_height = 380
+root.configure(background="#c9d2c6")
+window_height = 290
 window_width = 600
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -63,7 +63,7 @@ except:
 
 # Bundled app path(s) -------------------------------
 ffmpeg = config['ffmpeg_path']['path']
-hdr10plus_parser = config['parser_path']['path']
+hdr10plus_tool = config['parser_path']['path']
 mediainfocli = config['mediainfocli_path']['path']
 # Bundled app path(s) -------------------------------
 
@@ -97,35 +97,35 @@ def check_ffmpeg():
             pass
     # FFMPEG ------------------------------------------------------------------
 
-def check_hdr10plus_parser():
-    global hdr10plus_parser
-    # HDR10plus_parser --------------------------------------------------------
-    if shutil.which('hdr10plus_parser') != None:
-        hdr10plus_parser = '"' + str(pathlib.Path(shutil.which('hdr10plus_parser'))).lower() + '"'
-        messagebox.showinfo(title='Prompt!', message='hdr10plus_parser.exe found on system PATH, '
+def check_hdr10plus_tool():
+    global hdr10plus_tool
+    # HDR10plus_tool --------------------------------------------------------
+    if shutil.which('hdr10plus_tool') != None:
+        hdr10plus_tool = '"' + str(pathlib.Path(shutil.which('hdr10plus_tool'))).lower() + '"'
+        messagebox.showinfo(title='Prompt!', message='hdr10plus_tool.exe found on system PATH, '
                                                      'automatically setting path to location.\n\n'
                                                      '           Note: This can be changed in the config.ini file')
-        rem_hdr10plus_parser = messagebox.askyesno(title='Delete Included hdr10plus.exe?',
+        rem_hdr10plus_tool = messagebox.askyesno(title='Delete Included hdr10plus.exe?',
                                          message='Would you like to delete the included hdr10plus.exe?')
-        if rem_hdr10plus_parser == True:
-            shutil.rmtree(str(pathlib.Path("Apps/HDR10PlusParser")))
+        if rem_hdr10plus_tool == True:
+            shutil.rmtree(str(pathlib.Path("Apps/HDR10PlusTool")))
         try:
-            config.set('parser_path', 'path', hdr10plus_parser)
+            config.set('parser_path', 'path', hdr10plus_tool)
             with open(config_file, 'w') as configfile:
                 config.write(configfile)
         except:
             pass
-    elif hdr10plus_parser == '' and shutil.which('hdr10plus_parser') == None:
+    elif hdr10plus_tool == '' and shutil.which('hdr10plus_tool') == None:
             messagebox.showinfo(title='Info', message='Program will use the included '
-                                                      '"hdr10plus_parser.exe" located in the "Apps" folder')
-            hdr10plus_parser = '"' + str(pathlib.Path('Apps/HDR10PlusParser/hdr10plus_parser.exe')) + '"'
+                                                      '"hdr10plus_tool.exe" located in the "Apps" folder')
+            hdr10plus_tool = '"' + str(pathlib.Path('Apps/HDR10PlusTool/hdr10plus_tool.exe')) + '"'
             try:
-                config.set('parser_path', 'path', hdr10plus_parser)
+                config.set('parser_path', 'path', hdr10plus_tool)
                 with open(config_file, 'w') as configfile:
                     config.write(configfile)
             except:
                 pass
-    # HDR10plus_parser --------------------------------------------------------
+    # hdr10plus_tool --------------------------------------------------------
 
 def check_mediainfocli():
     global mediainfocli
@@ -193,19 +193,19 @@ def set_ffmpeg_path():
 
 options_menu.add_command(label='Set "ffmpeg.exe" path', command=set_ffmpeg_path)
 
-def set_hdr10plus_parser_path():
-    global hdr10plus_parser
-    path = filedialog.askopenfilename(title='Select Location to "hdr10plus_parser.exe"', initialdir='/',
-                                      filetypes=[('hdr10plus_parser', 'hdr10plus_parser.exe')])
+def set_hdr10plus_tool_path():
+    global hdr10plus_tool
+    path = filedialog.askopenfilename(title='Select Location to "hdr10plus_tool.exe"', initialdir='/',
+                                      filetypes=[('hdr10plus_tool', 'hdr10plus_tool.exe')])
     if path == '':
         pass
     elif path != '':
-        hdr10plus_parser = '"' + str(pathlib.Path(path)) + '"'
-        config.set('parser_path', 'path', hdr10plus_parser)
+        hdr10plus_tool = '"' + str(pathlib.Path(path)) + '"'
+        config.set('parser_path', 'path', hdr10plus_tool)
         with open(config_file, 'w') as configfile:
             config.write(configfile)
 
-options_menu.add_command(label='Set "hdr10plus_parser.exe" path', command=set_hdr10plus_parser_path)
+options_menu.add_command(label='Set "hdr10plus_tool.exe" path', command=set_hdr10plus_tool_path)
 
 def set_mediainfocli_path():
     global mediainfocli
@@ -251,15 +251,15 @@ help_menu.add_command(label="About", command=openaboutwindow)
 hdr10parser_notebook = ttk.Notebook(root)
 hdr10parser_notebook.grid(row=0, column=0, columnspan=4, sticky=E + W + N + S, padx=10, pady=(10, 0))
 hdr10parser_frame = Frame(hdr10parser_notebook, background="#434547")
-hdr10parser_notebook.add(hdr10parser_frame, text='HDR10+ Parser')
+hdr10parser_notebook.add(hdr10parser_frame, text='HDR10+ Tool')
 for n in range(1):
     hdr10parser_frame.grid_columnconfigure(n, weight=1)
-for n in range(2):
-    hdr10parser_frame.grid_rowconfigure(n, weight=1)
+# for n in range(2):
+#     hdr10parser_frame.grid_rowconfigure(n, weight=1)
 # ---------------------------------------------------------------------------------------------------------------- Tabs
 
 # Frames --------------------------------------------------------------------------------------------------------------
-# Video Frame -------------------------------------------------------------------------------------------
+# Input Frame -------------------------------------------------------------------------------------------
 input_frame = LabelFrame(hdr10parser_frame, text=' Input ')
 input_frame.grid(row=0, column=0, columnspan=5, sticky=E + W + N + S, padx=20, pady=(10,10))
 input_frame.configure(fg="white", bg="#434547", bd=3)
@@ -268,18 +268,18 @@ input_frame.rowconfigure(0, weight=1)
 input_frame.columnconfigure(0, weight=1)
 input_frame.columnconfigure(1, weight=1)
 
-# -------------------------------------------------------------------------------------------- Video Frame
+# -------------------------------------------------------------------------------------------- Input Frame
 
-# Options Frame -------------------------------------------------------------------------------------------
-options_frame = LabelFrame(hdr10parser_frame, text=' Options ')
-options_frame.grid(row=1, column=0, sticky=E + W + N + S, padx=20, pady=(10,10))
-options_frame.configure(fg="white", bg="#434547", bd=3)
-
-options_frame.rowconfigure(0, weight=1)
-options_frame.columnconfigure(0, weight=1)
-options_frame.columnconfigure(1, weight=1)
-
-# -------------------------------------------------------------------------------------------- Options Frame
+# # Options Frame -------------------------------------------------------------------------------------------
+# options_frame = LabelFrame(hdr10parser_frame, text=' Options ')
+# options_frame.grid(row=1, column=0, sticky=E + W + N + S, padx=20, pady=(10,10))
+# options_frame.configure(fg="white", bg="#434547", bd=3)
+#
+# options_frame.rowconfigure(0, weight=1)
+# options_frame.columnconfigure(0, weight=1)
+# options_frame.columnconfigure(1, weight=1)
+#
+# # -------------------------------------------------------------------------------------------- Options Frame
 
 # Output Frame -------------------------------------------------------------------------------------------
 output_frame = LabelFrame(hdr10parser_frame, text=' Output ')
@@ -387,18 +387,6 @@ def file_save():
 
 # --------------------------------------------------------------------------------------------------------- File Output
 
-# Single Profile ------------------------------------------------------------------------------------------------------
-single_profile = StringVar()
-single_profile_checkbox = Checkbutton(options_frame, text='Force Single Profile',
-                                          variable=single_profile, onvalue='--force-single-profile ', offvalue='')
-single_profile_checkbox.grid(row=0, column=0, columnspan=1, rowspan=1, padx=10, pady=(0, 0), sticky=N + S + W)
-single_profile_checkbox.configure(background="#434547", foreground="white", activebackground="#434547",
-                                      activeforeground="white", selectcolor="#434547",
-                                      font=("Helvetica", 11))
-single_profile.set('--force-single-profile ')
-
-# ------------------------------------------------------------------------------------------------------ Single Profile
-
 # Command -------------------------------------------------------------------------------------------------------------
 # Start Job -----------------------------------------------------------------------------------------------------------
 def start_job():
@@ -456,11 +444,11 @@ def start_job():
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                        + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb \
                        -f hevc - -hide_banner -loglevel warning -stats|' \
-                       + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
+                       + hdr10plus_tool + ' ' + 'extract -o ' + VideoOutputQuoted + ' -' + '"'
     elif shell_options.get() == "Debug":
         finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                        + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb -f hevc - |' \
-                       + hdr10plus_parser + ' ' + single_profile.get() + '-o ' + VideoOutputQuoted + ' -' + '"'
+                       + hdr10plus_tool + ' ' + 'extract -o ' + VideoOutputQuoted + ' -' + '"'
     if shell_options.get() == "Default":
         job = subprocess.Popen('cmd /c ' + finalcommand, universal_newlines=True,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
@@ -527,13 +515,13 @@ output_button.bind("<Leave>", output_button_hover_leave)\
 
 # Start Button ------------------------------------------
 def start_button_hover(e):
-    start_button["bg"] = "#424242"
+    start_button["bg"] = "grey"
 
 def start_button_hover_leave(e):
-    start_button["bg"] = "#808080"
+    start_button["bg"] = "#23272A"
 
 start_button = Button(root, text="Start Job", command=lambda:threading.Thread(target=start_job).start(),
-                      state=DISABLED, foreground="white", background="#808080", borderwidth="3", width=15)
+                      state=DISABLED, foreground="white", background="#23272A", borderwidth="3", width=15)
 start_button.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky=E+N+S)
 start_button.bind("<Enter>", start_button_hover)
 start_button.bind("<Leave>", start_button_hover_leave)
@@ -544,7 +532,7 @@ start_button.bind("<Leave>", start_button_hover_leave)
 if config['ffmpeg_path']['path'] == '':
     check_ffmpeg()
 if config['parser_path']['path'] == '':
-    check_hdr10plus_parser()
+    check_hdr10plus_tool()
 if config['mediainfocli_path']['path'] == '':
     check_mediainfocli()
 # Checks config for bundled app paths path ---------------
