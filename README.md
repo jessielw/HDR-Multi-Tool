@@ -1,4 +1,4 @@
-# HDR10Plus-Parser-Tool
+# HDR10Plus-Tool-Gui
 A basic GUI to parse MKV, TS, MP4, and HEVC HDR10+ dynamic metadata to .json
 
 Program only supports the above formats for now, I will add support for more if I come across any.
