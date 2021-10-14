@@ -27,7 +27,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
             root.destroy()
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("hdr10plus Tool Gui v1.24")
+root.title("hdr10plus Tool Gui v1.25")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#c9d2c6")
 window_height = 290
@@ -49,17 +49,31 @@ config_file = 'Runtime/config.ini'  # Creates (if doesn't exist) and defines loc
 config = ConfigParser()
 config.read(config_file)
 
-try:  # Create config parameters
+if not config.has_section('ffmpeg_path'):
     config.add_section('ffmpeg_path')
+if not config.has_option('ffmpeg_path', 'path'):
     config.set('ffmpeg_path', 'path', '')
+
+if not config.has_section('parser_path'):
     config.add_section('parser_path')
-    config.set('parser_path', 'path', '')  # First is section, second is key, and third is the value
+if not config.has_option('parser_path', 'path'):
+    config.set('parser_path', 'path', '')
+
+if not config.has_section('mediainfocli_path'):
     config.add_section('mediainfocli_path')
+if not config.has_option('mediainfocli_path', 'path'):
     config.set('mediainfocli_path', 'path', '')
+
+if not config.has_section('debug_option'):
+    config.add_section('debug_option')
+if not config.has_option('debug_option', 'option'):
+    config.set('debug_option', 'option', '')
+
+try:
     with open(config_file, 'w') as configfile:
         config.write(configfile)
 except:
-    pass
+    messagebox.showinfo(title='Error', message='Could Not Write to config.ini file, delete and try again')
 
 # Bundled app path(s) -------------------------------
 ffmpeg = config['ffmpeg_path']['path']
@@ -174,9 +188,23 @@ my_menu_bar.add_cascade(label='Options', menu=options_menu)
 options_submenu = Menu(root, tearoff=0, activebackground='dim grey')
 options_menu.add_cascade(label='Shell Options', menu=options_submenu)
 shell_options = StringVar()
-shell_options.set('Default')
-options_submenu.add_radiobutton(label='Shell Closes Automatically', variable=shell_options, value="Default")
-options_submenu.add_radiobutton(label='Shell Stays Open (Debug)', variable=shell_options, value="Debug")
+shell_options.set(config['debug_option']['option'])
+if shell_options.get() == '':
+    shell_options.set('Default')
+elif shell_options.get() != '':
+    shell_options.set(config['debug_option']['option'])
+def update_shell_option():
+    try:
+        config.set('debug_option', 'option', shell_options.get())
+        with open(config_file, 'w') as configfile:
+            config.write(configfile)
+    except:
+        pass
+update_shell_option()
+options_submenu.add_radiobutton(label='Progress Bars', variable=shell_options,
+                                value="Default", command=update_shell_option)
+options_submenu.add_radiobutton(label='CMD Shell (Debug)', variable=shell_options,
+                                value="Debug", command=update_shell_option)
 
 def set_ffmpeg_path():
     global ffmpeg
