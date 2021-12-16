@@ -7,7 +7,7 @@ Feel free to put an issue on the tracker here if the program should but doesn't 
 
 In the menu at the top, you can select 'Automatic' or 'Debug':
 
-'Automatic' spawns windows with progress bars and a read out
+'Progress Bars' spawns new windows with progress bars and a read out
 
-'Debug' will spawn a CMD shell and leave it open in order to read errors in the event you have one
+'CMD Shell (Debug)' will spawn a CMD shell and leave it open in order to read errors in the event you have one
 
