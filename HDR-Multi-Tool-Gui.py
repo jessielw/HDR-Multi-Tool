@@ -212,7 +212,7 @@ if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bun
             pass
 
     if shutil.which('ffmpeg') is not None:
-        ffmpeg = str(pathlib.Path(shutil.which('ffmpeg'))).lower()
+        ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))).lower() + '"'
         messagebox.showinfo(title='Prompt!', message='ffmpeg.exe found on system PATH, '
                                                      'automatically setting path to location.\n\n'
                                                      'Note: This can be changed in the config.ini file'
