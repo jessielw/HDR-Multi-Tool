@@ -314,7 +314,7 @@ input_frame.configure(fg="white", bg="#434547", bd=3)
 
 input_frame.rowconfigure(0, weight=1)
 for n in range(6):
-    input_frame.grid_rowconfigure(n, weight=1)
+    input_frame.grid_columnconfigure(n, weight=1)
 
 # -------------------------------------------------------------------------------------------- Input Frame
 
@@ -336,7 +336,7 @@ output_frame.configure(fg="white", bg="#434547", bd=3)
 
 output_frame.rowconfigure(0, weight=1)
 for n in range(3):
-    output_frame.grid_rowconfigure(n, weight=1)
+    output_frame.grid_columnconfigure(n, weight=1)
 
 # -------------------------------------------------------------------------------------------- Output Frame
 # -------------------------------------------------------------------------------------------------------------- Frames
