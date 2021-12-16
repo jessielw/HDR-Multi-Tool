@@ -4,6 +4,8 @@ from tkinter import filedialog, StringVar, messagebox, ttk
 import tkinter as tk
 import pathlib, subprocess, shutil, threading, webbrowser
 from TkinterDnD2 import *
+from idlelib.tooltip import Hovertip
+from pymediainfo import MediaInfo
 from Packages.about import openaboutwindow
 from configparser import ConfigParser
 
@@ -23,7 +25,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
 
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR-Multi-Tool-Gui v1.3")
+root.title("HDR-Multi-Tool-Gui v1.32")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 400
@@ -59,11 +61,6 @@ if not config.has_section('dolbyvision_tool_path'):
     config.add_section('dolbyvision_tool_path')
 if not config.has_option('dolbyvision_tool_path', 'path'):
     config.set('dolbyvision_tool_path', 'path', '')
-
-if not config.has_section('mediainfocli_path'):
-    config.add_section('mediainfocli_path')
-if not config.has_option('mediainfocli_path', 'path'):
-    config.set('mediainfocli_path', 'path', '')
 
 if not config.has_section('debug_option'):
     config.add_section('debug_option')
@@ -154,22 +151,6 @@ def set_dolbyvision_tool_path():
 
 options_menu.add_command(label='Set "dovi_tool.exe" path', command=set_dolbyvision_tool_path)
 
-
-def set_mediainfocli_path():
-    global mediainfocli
-    path = filedialog.askopenfilename(title='Select Location to "MediaInfo.exe"', initialdir='/',
-                                      filetypes=[('MediaInfo', 'MediaInfo.exe')])
-    if path == '':
-        pass
-    elif path != '':
-        mediainfocli = '"' + str(pathlib.Path(path)) + '"'
-        config.set('mediainfocli_path', 'path', mediainfocli)
-        with open(config_file, 'w') as configfile:
-            config.write(configfile)
-
-
-options_menu.add_command(label='Set "MediaInfo.exe" path', command=set_mediainfocli_path)
-
 options_menu.add_separator()
 
 
@@ -179,7 +160,7 @@ def reset_config():
         try:
             config.set('ffmpeg_path', 'path', '')
             config.set('hdr10plus_parser_path', 'path', '')
-            config.set('mediainfocli_path', 'path', '')
+            config.set('dolbyvision_tool_path', 'path', '')
             with open(config_file, 'w') as configfile:
                 config.write(configfile)
             messagebox.showinfo(title='Prompt', message='Please restart the program')
@@ -198,7 +179,6 @@ help_menu.add_command(label="About", command=openaboutwindow)
 # Bundled app path(s) -------------------------------------------------------------------------------------------------
 ffmpeg = config['ffmpeg_path']['path']
 hdr10plus_tool = config['hdr10plus_parser_path']['path']
-mediainfocli = config['mediainfocli_path']['path']
 dolbyvision_tool = config['dolbyvision_tool_path']['path']
 
 if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bundled app paths path -------------------
@@ -211,12 +191,13 @@ if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bun
         except (Exception,):
             pass
 
+
     if shutil.which('ffmpeg') is not None:
         ffmpeg = '"' + str(pathlib.Path(shutil.which('ffmpeg'))).lower() + '"'
         messagebox.showinfo(title='Prompt!', message='ffmpeg.exe found on system PATH, '
-                                                     'automatically setting path to location.\n\n'
-                                                     'Note: This can be changed in the config.ini file'
-                                                     ' or in the Options menu')
+                                                     'automatically setting path to location.\n\n '
+                                                     'Note: This can be changed in the config.ini file '
+                                                     'or in the Options menu')
         if pathlib.Path("Apps/ffmpeg/ffmpeg.exe").is_file():
             rem_ffmpeg = messagebox.askyesno(title='Delete Included ffmpeg?',
                                              message='Would you like to delete the included FFMPEG?')
@@ -232,22 +213,18 @@ if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bun
         ffmpeg = str(pathlib.Path("Apps/ffmpeg/ffmpeg.exe"))
         write_path_to_ffmpeg()
     else:
-        error_prompt = messagebox.askyesno(title='Error!',
-                                           message='Cannot find ffmpeg, '
-                                                   'please navigate to "ffmpeg.exe"')
+        error_prompt = messagebox.askyesno(title='Error!', message='Cannot find ffmpeg, '
+                                                                   'please navigate to "ffmpeg.exe"')
         if not error_prompt:
-            messagebox.showerror(title='Error!',
-                                 message='Program requires ffmpeg.exe to work correctly')
+            messagebox.showerror(title='Error!', message='Program requires ffmpeg.exe to work correctly')
             root.destroy()
         if error_prompt:
             set_ffmpeg_path()
             if not pathlib.Path(ffmpeg).is_file():
-                messagebox.showerror(title='Error!',
-                                     message='Program requires ffmpeg.exe to work correctly')
+                messagebox.showerror(title='Error!', message='Program requires ffmpeg.exe to work correctly')
                 root.destroy()
 
     # FFMPEG ------------------------------------------------------------------------------
-
 
 if not pathlib.Path(hdr10plus_tool.replace('"', '')).is_file():  # Checks config for bundled app paths path
     # HDR10plus_tool -----------------------------------------------------------------------
@@ -266,26 +243,6 @@ if not pathlib.Path(hdr10plus_tool.replace('"', '')).is_file():  # Checks config
                                                      'hdr10plustool.exe in the Options menu')
         webbrowser.open('https://github.com/quietvoid/hdr10plus_tool/releases')
     # hdr10plus_tool -------------------------------------------------------
-
-
-if not pathlib.Path(mediainfocli.replace('"', '')).is_file():  # Checks config for bundled app paths path
-    # mediainfocli -------------------------------------------------------------
-    if pathlib.Path('Apps/MediaInfoCLI/MediaInfo.exe').is_file():
-        messagebox.showinfo(title='Info', message='Program will use the included '
-                                                  '"MediaInfo.exe" located in the "Apps" folder')
-        mediainfocli = '"' + str(pathlib.Path('Apps/MediaInfoCLI/MediaInfo.exe')) + '"'
-        try:
-            config.set('mediainfocli_path', 'path', mediainfocli)
-            with open(config_file, 'w') as configfile:
-                config.write(configfile)
-        except (Exception,):
-            pass
-    elif not pathlib.Path('Apps/MediaInfoCLI/MediaInfo.exe').is_file():
-        messagebox.showerror(title='Error!', message='Please download mediainfo.exe and set path to '
-                                                     'mediainfo.exe in the Options menu')
-        webbrowser.open('https://mediaarea.net/download/binary/mediainfo/21.09/MediaInfo_CLI_21.09_Windows_x64.zip')
-    # mediainfocli ----------------------------------------------------------
-
 
 # dolbyvision_tool --------------------------------------------------------
 if not pathlib.Path(dolbyvision_tool.replace('"', '')).is_file():
@@ -363,6 +320,7 @@ for n in range(3):
 # HDR Parse Checkbutton -----------------------------------------------------------------------------------------------
 def hdr10plus_parse():
     dolbyvision_parse.set('off')
+    start_button.configure(state=NORMAL)
 
 
 hdr_parse = StringVar()
@@ -379,6 +337,7 @@ hdr_parse.set('off')
 # Dolby Vision Checkbutton --------------------------------------------------------------------------------------------
 def dolby_parse():
     hdr_parse.set('off')
+    start_button.configure(state=NORMAL)
 
 
 dolbyvision_parse = StringVar()
@@ -388,7 +347,6 @@ dolbyvision_parse_checkbox.grid(row=0, column=0, columnspan=1, rowspan=1, padx=1
 dolbyvision_parse_checkbox.configure(background="#434547", foreground="white", activebackground="#434547",
                                      activeforeground="white", selectcolor="#434547", font=("Helvetica", 12))
 dolbyvision_parse.set('off')
-
 
 # -------------------------------------------------------------------------------------------- Dolby Vision Checkbutton
 
@@ -434,32 +392,47 @@ dobly_vision_mode_menu.bind("<Leave>", dobly_vision_mode_menu_hover_leave)
 
 # Input Button Functions ----------------------------------------------------------------------------------------------
 def check_for_hdr():
-    hdr_format_mediainfocli = '"' + mediainfocli + " " + '"--Inform=Video;%HDR_Format/String%"' \
-                              + " " + VideoInputQuoted + '"'
     try:
-        mediainfo_duration = subprocess.Popen('cmd /c ' + hdr_format_mediainfocli,
-                                              creationflags=subprocess.CREATE_NO_WINDOW,
-                                              universal_newlines=True, stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE, stdin=subprocess.PIPE)
-        stdout, stderr = mediainfo_duration.communicate()
-        if 'HDR10+' in stdout:
-            link_input_label.config(text=stdout.rstrip("\n"), anchor='center')
+        mediainfo_hdr_parse = MediaInfo.parse(VideoInputQuoted.replace('"', ''))
+        for track in mediainfo_hdr_parse.tracks:
+            if track.track_type == "Video":
+                hdr_format_string = ''.join(track.other_hdr_format)
+
+        if 'Dolby Vision' in hdr_format_string and 'HDR10+' in hdr_format_string:  # Source is Dolby Vision and HDR10+
+            messagebox.showinfo(title='Information', message='Source file has both Dolby Vision and HDR10+\n\n'
+                                                             'If you want to retain both HDR formats in your encode '
+                                                             'you will need to parse HDR10+ AND Dolby Vision '
+                                                             'separately to inject them into your encoder')
+            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
+            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+        elif 'HDR10+' in hdr_format_string:  # If source only has HDR10+
+            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor='center')
             hdr_tool_tabs.select(hdr_frame)
             hdr_parse.set('on')
             dolbyvision_parse.set('off')
-        elif 'Dolby Vision' in stdout:
-            link_input_label.config(text=stdout.rstrip("\n"), anchor=W)
+            start_button.configure(state=NORMAL)
+            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+        elif 'Dolby Vision' in hdr_format_string:  # If source only has Dolby Vision
+            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
             hdr_tool_tabs.select(dolby_frame)
             hdr_parse.set('off')
             dolbyvision_parse.set('on')
-        else:
+            start_button.configure(state=NORMAL)
+            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+        else:  # If source has no HDR
             link_input_label.config(text='No Parsing Needed', anchor='center')
             messagebox.showinfo(title="No Processing Needed", message="No need to parse anything other then an HDR10+"
                                                                       "or Dolby Vision file.\n\n If you see this in "
                                                                       "error please let me know on the github tracker "
                                                                       "with a sample of the source file.")
+            Hovertip(link_input_label, 'No Parsing Needed', hover_delay=600)
     except (Exception,):
-        pass
+        messagebox.showerror(title='Error', message='Could not automatically detect HDR type, please post on the '
+                                                    'github tracker with a sample of the source file.\n\n'
+                                                    'Program can still parse without automatic detection, just '
+                                                    'select the proper HDR type from your file and start job.')
+        webbrowser.open('https://github.com/jlw4049/HDR-Multi-Tool-Gui/issues')
+
 
 def input_button_commands():
     global VideoInput, autosavefilename, autofilesave_dir_path, VideoInputQuoted, VideoOutput
@@ -490,7 +463,6 @@ def input_button_commands():
             output_entry.insert(0, str(VideoOut))
             output_entry.configure(state=DISABLED)
             output_button.configure(state=NORMAL)
-            start_button.configure(state=NORMAL)
             check_for_hdr()
         else:
             link_input_label.config(text='Please Open a Dolby Vision or HDR10+ compatible file', anchor='center')
@@ -538,7 +510,6 @@ def update_file_input(*args):
         output_entry.insert(0, str(VideoOut))
         output_entry.configure(state=DISABLED)
         output_button.configure(state=NORMAL)
-        start_button.configure(state=NORMAL)
         check_for_hdr()
     else:
         link_input_label.config(text='Please Open a Dolby Vision or HDR10+ compatible file', anchor='center')
@@ -571,20 +542,12 @@ def start_job():
         VideoOutputQuoted = '"' + VideoOutput + '.bin"'
 
     if shell_options.get() == "Default":
-        global total_duration
-        mediainfocli_cmd = '"' + mediainfocli + " " + '--Inform="General;%FileSize%"' \
-                           + " " + VideoInputQuoted + '"'
-
         try:
-            mediainfo_duration = subprocess.Popen('cmd /c ' + mediainfocli_cmd,
-                                                  creationflags=subprocess.CREATE_NO_WINDOW,
-                                                  universal_newlines=True, stdout=subprocess.PIPE,
-                                                  stderr=subprocess.PIPE,
-                                                  stdin=subprocess.PIPE)
-            stdout, stderr = mediainfo_duration.communicate()
-            math = int(stdout) / 1000
-            split = str(math)
-            total_duration = split.rsplit('.', 1)[0]
+            mediainfo_file_size = MediaInfo.parse(VideoInputQuoted.replace('"', ''))
+            for track in mediainfo_file_size.tracks:
+                if track.track_type == "General":
+                    total_file_size = track.file_size
+            total_duration = str(int(total_file_size) / 1000).rsplit('.', 1)[0]  # Compressed code for progress bars
         except (Exception,):
             pass
 
@@ -634,7 +597,6 @@ def start_job():
                              '-f hevc - -hide_banner -loglevel warning -stats|' \
                            + dolbyvision_tool + ' ' + dobly_vision_mode_choices[dobly_vision_mode.get()] \
                            + dolbyvision_crop.get() + ' extract-rpu - -o ' + str(VideoOutputQuoted) + '"'
-            print(finalcommand)
         elif shell_options.get() == "Debug":
             finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                            + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb -f hevc - |' \
