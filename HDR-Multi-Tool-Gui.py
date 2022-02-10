@@ -325,13 +325,13 @@ info_frame.configure(fg="white", bg="#434547", bd=3)
 info_frame.columnconfigure(0, weight=1)
 link_input_label = Label(info_frame, text='Please Open a Dolby Vision or HDR10+ compatible file', background="#434547",
                          foreground="white", height=1, font=("Helvetica", 10))
-link_input_label.grid(row=1, column=0, columnspan=5, padx=10, pady=5, sticky=W + E + N)
+link_input_label.grid(row=1, column=0, columnspan=5, padx=10, pady=2, sticky=W + E + N)
 
 # --------------------------------------------------------------------------------------------- Info Frame
 
 # Output Frame -------------------------------------------------------------------------------------------
 output_frame = LabelFrame(root, text=' Output ')
-output_frame.grid(row=3, column=0, columnspan=5, sticky=E + W, padx=20, pady=(0, 0))
+output_frame.grid(row=3, column=0, columnspan=5, sticky=E + W, padx=20, pady=(5, 0))
 output_frame.configure(fg="white", bg="#434547", bd=3)
 
 output_frame.rowconfigure(0, weight=1)
@@ -343,7 +343,7 @@ for n in range(3):
 
 # Tabs ----------------------------------------------------------------------------------------------------------------
 hdr_tool_tabs = ttk.Notebook(root)
-hdr_tool_tabs.grid(row=2, column=0, columnspan=4, sticky=E + W + N + S, padx=10, pady=(0, 0))
+hdr_tool_tabs.grid(row=2, column=0, columnspan=4, sticky=E + W + N + S, padx=16, pady=(5, 0))
 hdr_frame = Frame(hdr_tool_tabs, background="#434547")
 dolby_frame = Frame(hdr_tool_tabs, background="#434547")
 hdr_tool_tabs.add(hdr_frame, text='  HDR10+ ')
