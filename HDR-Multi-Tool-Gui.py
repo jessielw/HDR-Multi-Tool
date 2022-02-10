@@ -26,7 +26,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
 
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR-Multi-Tool-Gui v1.33")
+root.title("HDR-Multi-Tool-Gui v1.34")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 400
