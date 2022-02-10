@@ -8,6 +8,7 @@ from idlelib.tooltip import Hovertip
 from pymediainfo import MediaInfo
 from Packages.about import openaboutwindow
 from configparser import ConfigParser
+from ctypes import windll
 
 
 # Main Gui & Windows --------------------------------------------------------
@@ -25,7 +26,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
 
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR-Multi-Tool-Gui v1.32")
+root.title("HDR-Multi-Tool-Gui v1.33")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 400
@@ -37,10 +38,52 @@ y_coordinate = int((screen_height / 2) - (window_height / 2))
 root.geometry("{}x{}+{}+{}".format(window_width, window_height, x_coordinate, y_coordinate))
 root.protocol('WM_DELETE_WINDOW', root_exit_function)
 
+# Block of code to fix DPI awareness issues on Windows 7 or higher
+try:
+    windll.shcore.SetProcessDpiAwareness(2)  # if your Windows version >= 8.1
+except(Exception,):
+    windll.user32.SetProcessDPIAware()  # Windows 8.0 or less
+# Block of code to fix DPI awareness issues on Windows 7 or higher
+
 for n in range(2):
     root.grid_columnconfigure(n, weight=1)
 for n in range(5):
     root.grid_rowconfigure(n, weight=1)
+
+# Themes --------------------------------------------------------------------------------------------------------------
+# Custom Tkinter Theme-----------------------------------------
+custom_style = ttk.Style()
+custom_style.theme_create('jlw_style', parent='alt', settings={
+    # Notebook Theme Settings -------------------
+    "TNotebook": {"configure": {"tabmargins": [5, 5, 5, 0]}},
+    "TNotebook.Tab": {"configure": {"padding": [5, 1], "background": 'grey', 'foreground': 'white', 'focuscolor': ''},
+                      "map": {"background": [("selected", '#434547')], "expand": [("selected", [1, 1, 1, 0])]}}})
+# Notebook Theme Settings -------------------
+custom_style.theme_use('jlw_style')  # Enable the use of the custom theme
+# Progressbar Color ----------------------------------
+custom_style.configure("purple.Horizontal.TProgressbar", background='purple')
+
+
+# ---------------------------------- Progressbar Color
+
+# Hover over button theme ---------------------------------------
+class HoverButton(tk.Button):
+    def __init__(self, master, **kw):
+        tk.Button.__init__(self, master=master, **kw)
+        self.defaultBackground = self["background"]
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, e):
+        self['background'] = self['activebackground']
+
+    def on_leave(self, e):
+        self['background'] = self.defaultBackground
+
+
+# --------------------------------------- Hover over button theme
+# -------------------------------------------------------------------------------------------------------------- Themes
+
 
 # Bundled Apps --------------------------------------------------------------------------------------------------------
 config_file = 'Runtime/config.ini'  # Creates (if it doesn't exist) and defines location of config.ini
@@ -321,6 +364,8 @@ for n in range(3):
 def hdr10plus_parse():
     dolbyvision_parse.set('off')
     start_button.configure(state=NORMAL)
+    if dolbyvision_parse.get() == 'off' and hdr_parse.get() == 'off':  # If both boxes un-checked, disable start
+        start_button.configure(state=DISABLED)
 
 
 hdr_parse = StringVar()
@@ -338,6 +383,8 @@ hdr_parse.set('off')
 def dolby_parse():
     hdr_parse.set('off')
     start_button.configure(state=NORMAL)
+    if dolbyvision_parse.get() == 'off' and hdr_parse.get() == 'off':  # If both boxes un-checked, disable start
+        start_button.configure(state=DISABLED)
 
 
 dolbyvision_parse = StringVar()
@@ -373,16 +420,15 @@ def dobly_vision_mode_menu_hover_leave(e):
 
 
 dobly_vision_mode = StringVar()
-dobly_vision_mode_choices = {'RPU untouched': '-m 0',
-                             'MEL: Converts RPU to be MEL compatible': '-m 1',
-                             '8.1: Converts the RPU to be profile 8.1 compatible': '-m 2',
-                             '5 to 8: Converts profile 5 to 8': '-m 3'}
+dobly_vision_mode_choices = {'Extract RPU: Untouched': '-m 0',
+                             'Extract RPU: MEL': '-m 1',
+                             'Extract RPU: Profile 8': '-m 2'}
 dobly_vision_mode_menu_label = Label(dolby_frame, text="Parsing Mode :", background="#434547", foreground="white")
 dobly_vision_mode_menu_label.grid(row=1, column=0, columnspan=1, padx=10, pady=0, sticky=W + S)
 dobly_vision_mode_menu = OptionMenu(dolby_frame, dobly_vision_mode, *dobly_vision_mode_choices.keys())
-dobly_vision_mode_menu.config(background="#23272A", foreground="white", highlightthickness=1, width=15, anchor=W)
+dobly_vision_mode_menu.config(background="#23272A", foreground="white", highlightthickness=1, width=18, anchor=W)
 dobly_vision_mode_menu.grid(row=2, column=0, columnspan=1, padx=10, pady=(5, 5), sticky=W + N)
-dobly_vision_mode.set('8.1: Converts the RPU to be profile 8.1 compatible')
+dobly_vision_mode.set('Extract RPU: Profile 8')
 dobly_vision_mode_menu["menu"].configure(activebackground="dim grey")
 dobly_vision_mode_menu.bind("<Enter>", dobly_vision_mode_menu_hover)
 dobly_vision_mode_menu.bind("<Leave>", dobly_vision_mode_menu_hover_leave)
@@ -391,47 +437,67 @@ dobly_vision_mode_menu.bind("<Leave>", dobly_vision_mode_menu_hover_leave)
 # ---------------------------------------------------------------------------------------------- Dolby Vision Mode Menu
 
 # Input Button Functions ----------------------------------------------------------------------------------------------
-def check_for_hdr():
+def check_for_hdr():  # Block of code to check for what type of HDR there is
     try:
-        mediainfo_hdr_parse = MediaInfo.parse(VideoInputQuoted.replace('"', ''))
+        mediainfo_hdr_parse = MediaInfo.parse(VideoInputQuoted.replace('"', ''))  # Remove quotes from input
         for track in mediainfo_hdr_parse.tracks:
-            if track.track_type == "Video":
-                hdr_format_string = ''.join(track.other_hdr_format)
-
-        if 'Dolby Vision' in hdr_format_string and 'HDR10+' in hdr_format_string:  # Source is Dolby Vision and HDR10+
-            messagebox.showinfo(title='Information', message='Source file has both Dolby Vision and HDR10+\n\n'
-                                                             'If you want to retain both HDR formats in your encode '
-                                                             'you will need to parse HDR10+ AND Dolby Vision '
-                                                             'separately to inject them into your encoder')
-            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
-            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
-        elif 'HDR10+' in hdr_format_string:  # If source only has HDR10+
-            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor='center')
-            hdr_tool_tabs.select(hdr_frame)
-            hdr_parse.set('on')
-            dolbyvision_parse.set('off')
-            start_button.configure(state=NORMAL)
-            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
-        elif 'Dolby Vision' in hdr_format_string:  # If source only has Dolby Vision
-            link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
-            hdr_tool_tabs.select(dolby_frame)
-            hdr_parse.set('off')
-            dolbyvision_parse.set('on')
-            start_button.configure(state=NORMAL)
-            Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
-        else:  # If source has no HDR
-            link_input_label.config(text='No Parsing Needed', anchor='center')
-            messagebox.showinfo(title="No Processing Needed", message="No need to parse anything other then an HDR10+"
-                                                                      "or Dolby Vision file.\n\n If you see this in "
-                                                                      "error please let me know on the github tracker "
-                                                                      "with a sample of the source file.")
-            Hovertip(link_input_label, 'No Parsing Needed', hover_delay=600)
-    except (Exception,):
-        messagebox.showerror(title='Error', message='Could not automatically detect HDR type, please post on the '
-                                                    'github tracker with a sample of the source file.\n\n'
-                                                    'Program can still parse without automatic detection, just '
-                                                    'select the proper HDR type from your file and start job.')
-        webbrowser.open('https://github.com/jlw4049/HDR-Multi-Tool-Gui/issues')
+            if track.track_type == "Video":  # Set's mediainfo to parse video portion of the input file
+                try:
+                    hdr_format_string = ''.join(track.other_hdr_format)
+                    if 'Dolby Vision' in hdr_format_string and 'HDR10+' in hdr_format_string:
+                        messagebox.showinfo(title='Information',  # Source is Dolby Vision and HDR10+
+                                            message='Source file has both Dolby Vision and HDR10+\n\n'
+                                                    'If you want to retain both HDR formats in your encode '
+                                                    'you will need to parse HDR10+ AND Dolby Vision '
+                                                    'separately to inject them into your encoder')
+                        hdr_tool_tabs.select(dolby_frame)
+                        hdr_parse.set('off')
+                        dolbyvision_parse.set('off')
+                        output_button.configure(state=NORMAL)
+                        start_button.config(state=DISABLED)
+                        link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
+                        Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+                    elif 'HDR10+' in hdr_format_string:  # If source only has HDR10+
+                        link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor='center')
+                        hdr_tool_tabs.select(hdr_frame)
+                        hdr_parse.set('on')
+                        dolbyvision_parse.set('off')
+                        start_button.configure(state=NORMAL)
+                        output_button.configure(state=NORMAL)
+                        Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+                    elif 'Dolby Vision' in hdr_format_string:  # If source only has Dolby Vision
+                        link_input_label.config(text=hdr_format_string.rstrip("\n"), anchor=W)
+                        hdr_tool_tabs.select(dolby_frame)
+                        hdr_parse.set('off')
+                        dolbyvision_parse.set('on')
+                        start_button.configure(state=NORMAL)
+                        output_button.configure(state=NORMAL)
+                        Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+                except TypeError:  # If input file has no HDR metadata to parse
+                    hdr_format_string = track.other_hdr_format
+                    if hdr_format_string is None:
+                        messagebox.showinfo(title='Info', message='Input has no HDR metadata, no parsing needed')
+                        link_input_label.config(text='Input has no HDR metadata, no parsing needed', anchor=CENTER)
+                        hdr_tool_tabs.select(hdr_frame)
+                        hdr_parse.set('off')
+                        dolbyvision_parse.set('off')
+                        start_button.configure(state=DISABLED)
+                        input_entry.configure(state=NORMAL)
+                        input_entry.delete(0, END)
+                        input_entry.configure(state=DISABLED)
+                        output_entry.configure(state=NORMAL)
+                        output_entry.delete(0, END)
+                        output_entry.configure(state=DISABLED)
+                        output_button.configure(state=DISABLED)
+                        Hovertip(link_input_label, 'Input has no HDR metadata, no parsing needed', hover_delay=600)
+    except(Exception,):
+        input_error = messagebox.askyesno(title='Error', message='Could not automatically detect HDR type, '
+                                                                 'would you like to post error on the github '
+                                                                 'tracker? \n\n NOTE: Program can still parse '
+                                                                 'without automatic detection, just select the '
+                                                                 'proper HDR type from your file and start job.')
+        if input_error:
+            webbrowser.open('https://github.com/jlw4049/HDR-Multi-Tool-Gui/issues')
 
 
 def input_button_commands():
@@ -463,7 +529,29 @@ def input_button_commands():
             output_entry.insert(0, str(VideoOut))
             output_entry.configure(state=DISABLED)
             output_button.configure(state=NORMAL)
-            check_for_hdr()
+            if file_extension == '.hevc':  # If input file is *.hevc show message
+                messagebox.showinfo(title='Info', message='Mediainfo does not currently support parsing a raw HEVC '
+                                                          'file, the program is unable to automatically detect '
+                                                          'which version of HDR is inside the source HEVC file, '
+                                                          'please mux to MKV for automatic detection or manually '
+                                                          'select the correct HDR parsing format')
+                hdr_parse.set('off')  # uncheck hdr button if checked
+                dolbyvision_parse.set('off')  # uncheck dolbyvision button if checked
+            mediainfo_hdr_parse = MediaInfo.parse(VideoInputQuoted.replace('"', ''))  # Remove quotes for mediainfo
+            for track in mediainfo_hdr_parse.tracks:
+                if track.track_type == 'General':
+                    if track.count_of_video_streams is not None:
+                        check_for_hdr()
+                    elif track.count_of_video_streams is None:
+                        input_entry.configure(state=NORMAL)
+                        input_entry.delete(0, END)
+                        input_entry.configure(state=DISABLED)
+                        output_entry.configure(state=NORMAL)
+                        output_entry.delete(0, END)
+                        output_entry.configure(state=DISABLED)
+                        output_button.config(state=DISABLED)
+                        start_button.configure(state=DISABLED)
+                        messagebox.showinfo(title='Info', message='Input has no video streams')
         else:
             link_input_label.config(text='Please Open a Dolby Vision or HDR10+ compatible file', anchor='center')
             messagebox.showinfo(title="Wrong File Type",
@@ -493,7 +581,8 @@ def update_file_input(*args):
     input_entry.delete(0, END)
     VideoInput = str(input_dnd.get()).replace("{", "").replace("}", "")
     file_extension = pathlib.Path(VideoInput).suffix
-    if file_extension == '.hevc' or file_extension == '.mkv' or file_extension == '.mp4' or file_extension == '.ts':
+    supported_extensions = ['.mkv', '.mp4', '.ts', '.hevc']
+    if file_extension in supported_extensions:
         autofilesave_file_path = pathlib.Path(VideoInput)  # Command to get file input location
         autofilesave_dir_path = autofilesave_file_path.parents[0]  # Final command to get only the directory
         VideoInputQuoted = '"' + str(pathlib.Path(VideoInput)) + '"'
@@ -510,7 +599,29 @@ def update_file_input(*args):
         output_entry.insert(0, str(VideoOut))
         output_entry.configure(state=DISABLED)
         output_button.configure(state=NORMAL)
-        check_for_hdr()
+        if file_extension == '.hevc':  # If input file is *.hevc show message
+            messagebox.showinfo(title='Info', message='Mediainfo does not currently support parsing a raw HEVC '
+                                                      'file, the program is unable to automatically detect '
+                                                      'which version of HDR is inside the source HEVC file, '
+                                                      'please mux to MKV for automatic detection or manually '
+                                                      'select the correct HDR parsing format')
+            hdr_parse.set('off')  # uncheck hdr button if checked
+            dolbyvision_parse.set('off')
+        mediainfo_hdr_parse = MediaInfo.parse(VideoInputQuoted.replace('"', ''))  # Remove quotes for mediainfo
+        for track in mediainfo_hdr_parse.tracks:
+            if track.track_type == 'General':
+                if track.count_of_video_streams is not None:  # If there is No video tracks
+                    check_for_hdr()
+                elif track.count_of_video_streams is None:  # If there is video tracks
+                    input_entry.configure(state=NORMAL)
+                    input_entry.delete(0, END)
+                    input_entry.configure(state=DISABLED)
+                    output_entry.configure(state=NORMAL)
+                    output_entry.delete(0, END)
+                    output_entry.configure(state=DISABLED)
+                    output_button.config(state=DISABLED)
+                    start_button.configure(state=DISABLED)
+                    messagebox.showinfo(title='Info', message='Input has no video streams')
     else:
         link_input_label.config(text='Please Open a Dolby Vision or HDR10+ compatible file', anchor='center')
         messagebox.showinfo(title="Wrong File Type", message="Try Again With a Supported File Type!\n\nIf this is a "
@@ -522,9 +633,10 @@ def update_file_input(*args):
 # File Output ---------------------------------------------------------------------------------------------------------
 def file_save():
     global VideoOutput
-    VideoOutput = filedialog.asksaveasfilename(defaultextension="", initialdir=autofilesave_dir_path,
-                                               title="Select a Save Location", initialfile=autosavefilename)
-    if VideoOutput:
+    VideoOutput_window = filedialog.asksaveasfilename(defaultextension="", initialdir=autofilesave_dir_path,
+                                                      title="Select a Save Location", initialfile=autosavefilename)
+    if VideoOutput_window:
+        VideoOutput = VideoOutput_window
         output_entry.configure(state=NORMAL)  # Enable entry box for commands under
         output_entry.delete(0, END)  # Remove current text in entry
         output_entry.insert(0, VideoOutput)  # Insert the 'path'
@@ -578,13 +690,14 @@ def start_job():
         encode_window_progress = Text(window, height=2, relief=SUNKEN, bd=3)
         encode_window_progress.grid(row=1, column=0, pady=(10, 6), padx=10, sticky=E + W)
         encode_window_progress.insert(END, '')
-        app_progress_bar = ttk.Progressbar(window, orient=HORIZONTAL, mode='determinate')
+        app_progress_bar = ttk.Progressbar(window, style="purple.Horizontal.TProgressbar", orient=HORIZONTAL,
+                                           mode='determinate')
         app_progress_bar.grid(row=2, pady=(10, 10), padx=15, sticky=E + W)
     if hdr_parse.get() == 'on':
         if shell_options.get() == "Default":
             finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                            + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb \
-                           -f hevc - -hide_banner -loglevel warning -stats|' \
+                               -f hevc - -hide_banner -loglevel warning -stats|' \
                            + hdr10plus_tool + ' ' + 'extract -o ' + str(VideoOutputQuoted) + '. -' + '"'
         elif shell_options.get() == "Debug":
             finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
@@ -607,18 +720,22 @@ def start_job():
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                creationflags=subprocess.CREATE_NO_WINDOW)
         for line in job.stdout:
-            try:
-                encode_window_progress.delete('1.0', END)
-                encode_window_progress.insert(END, 'Starting Job...')
-                if line.split('=', 1)[0] == 'frame':
+            if 'stopping' in str(line) or 'No metadata' in str(line):
+                window.destroy()
+                messagebox.showerror(title='Error', message=line)
+            else:
+                try:
+                    encode_window_progress.delete('1.0', END)
+                    encode_window_progress.insert(END, 'Starting Job...')
+                    if line.split('=', 1)[0] == 'frame':
+                        encode_window_progress.delete('1.0', END)
+                        encode_window_progress.insert(END, line)
+                        size = line.split('size=', 1)[1].split()[0].rsplit('k', 1)[0]
+                        percent = '{:.1%}'.format(int(size) / int(total_duration)).split('.', 1)[0]
+                        app_progress_bar['value'] = percent
+                except (Exception,):
                     encode_window_progress.delete('1.0', END)
                     encode_window_progress.insert(END, line)
-                    size = line.split('size=', 1)[1].split()[0].rsplit('k', 1)[0]
-                    percent = '{:.1%}'.format(int(size) / int(total_duration)).split('.', 1)[0]
-                    app_progress_bar['value'] = percent
-            except (Exception,):
-                encode_window_progress.delete('1.0', END)
-                encode_window_progress.insert(END, line)
         window.destroy()
     elif shell_options.get() == "Debug":
         subprocess.Popen('cmd /k ' + finalcommand)
@@ -630,64 +747,55 @@ def start_job():
 
 # Buttons -------------------------------------------------------------------------------------------------------------
 # Input Button --------------------------------------
-def input_button_hover(e):
-    input_button["bg"] = "grey"
-
-
-def input_button_hover_leave(e):
-    input_button["bg"] = "#23272A"
-
-
 # Drag and Drop Function for Input Button
 input_dnd = StringVar()
 input_dnd.trace('w', update_file_input)
-input_button = tk.Button(input_frame, text="Open File", command=input_button_commands, foreground="white",
-                         background="#23272A", borderwidth="3", width=9)
+input_button = HoverButton(input_frame, text="Open File", command=input_button_commands, foreground="white",
+                           background="#23272A", borderwidth="3", width=9, activebackground='grey')
 input_button.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky=W)
 input_button.drop_target_register(DND_FILES)
 input_button.dnd_bind('<<Drop>>', drop_input)
-input_button.bind("<Enter>", input_button_hover)
-input_button.bind("<Leave>", input_button_hover_leave)
 
 input_entry = Entry(input_frame, borderwidth=4, background="#CACACA", width=55)
 input_entry.grid(row=0, column=1, columnspan=5, padx=5, pady=5, sticky=E + W)
 input_entry.drop_target_register(DND_FILES)
 input_entry.dnd_bind('<<Drop>>', drop_input)
 
-
 # Output Button --------------------------------------
-def output_button_hover(e):
-    output_button["bg"] = "grey"
-
-
-def output_button_hover_leave(e):
-    output_button["bg"] = "#23272A"
-
-
-output_button = Button(output_frame, text="Save File", command=file_save, state=DISABLED, foreground="white",
-                       background="#23272A", borderwidth="3")
+output_button = HoverButton(output_frame, text="Save File", command=file_save, state=DISABLED, foreground="white",
+                            background="#23272A", borderwidth="3", activebackground='grey')
 output_button.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky=N + S + E + W)
 output_entry = Entry(output_frame, width=35, borderwidth=4, background="#CACACA")
 output_entry.grid(row=0, column=1, columnspan=3, padx=5, pady=5, sticky=E + W)
-output_button.bind("<Enter>", output_button_hover)
-output_button.bind("<Leave>", output_button_hover_leave)
 
 
 # Start Button ------------------------------------------
-def start_button_hover(e):
-    start_button["bg"] = "grey"
+# Check to see if output file already exists and asks the user if they want to over-write it --------------------------
+def check_for_existing_output():
+    if hdr_parse.get() == 'on':
+        output = str(pathlib.Path(VideoOutput).with_suffix('')) + '.json'
+    if dolbyvision_parse.get() == 'on':
+        output = str(pathlib.Path(VideoOutput).with_suffix('')) + '.bin'
+    if pathlib.Path(output).is_file():  # Checks if 'output' variable/file already exists
+        overwrite_output = messagebox.askyesno(title='Overwrite?',  # If exists would you like to over-write?
+                                               message=f'Would you like to overwrite "{str(output)}"?')
+        if overwrite_output:  # If "yes"
+            threading.Thread(target=start_job).start()  # Run the start job command
+        if not overwrite_output:  # If "no"
+            file_save()  # Open Output button function to set a new output file location
+    else:  # If output doesn't exist go on and run the start job code
+        threading.Thread(target=start_job).start()
 
 
-def start_button_hover_leave(e):
-    start_button["bg"] = "#23272A"
+# -------------------------- Check to see if output file already exists and asks the user if they want to over-write it
 
 
-start_button = Button(output_frame, text="Start Job", command=lambda: threading.Thread(target=start_job).start(),
-                      state=DISABLED, foreground="white", background="#23272A", borderwidth="3", width=15)
-start_button.grid(row=0, column=4, columnspan=1, padx=(5, 5), pady=(0, 4), sticky=E + S)
-start_button.bind("<Enter>", start_button_hover)
-start_button.bind("<Leave>", start_button_hover_leave)
+# Start Button Code ---------------------------------------------------------------------------------------------------
+start_button = HoverButton(root, text='Start Job', command=check_for_existing_output, foreground='white',
+                           background='#23272A', borderwidth='3', activebackground='grey', state=DISABLED)
+start_button.grid(row=5, column=2, columnspan=1, padx=(10, 20), pady=(15, 2), sticky=E)
 
+# --------------------------------------------------------------------------------------------------- Start Button Code
 # ------------------------------------------------------------------------------------------------------------- Buttons
 # End Loop ------------------------------------------------------------------------------------------------------------
 root.mainloop()
