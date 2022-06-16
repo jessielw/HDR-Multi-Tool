@@ -1,14 +1,20 @@
 # Imports--------------------------------------------------------------------
-from tkinter import *
-from tkinter import filedialog, StringVar, messagebox, ttk
+import pathlib
+import shutil
+import subprocess
+import threading
 import tkinter as tk
-import pathlib, subprocess, shutil, threading, webbrowser
-from TkinterDnD2 import *
-from idlelib.tooltip import Hovertip
-from pymediainfo import MediaInfo
-from Packages.about import openaboutwindow
+import webbrowser
 from configparser import ConfigParser
 from ctypes import windll
+from idlelib.tooltip import Hovertip
+from tkinter import *
+from tkinter import filedialog, StringVar, messagebox, ttk
+
+from TkinterDnD2 import *
+from pymediainfo import MediaInfo
+
+from Packages.about import openaboutwindow
 
 
 # Main Gui & Windows --------------------------------------------------------
@@ -26,7 +32,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
 
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR-Multi-Tool-Gui v1.34")
+root.title("HDR-Multi-Tool-Gui v1.35")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 400
@@ -422,19 +428,48 @@ def dobly_vision_mode_menu_hover_leave(e):
 dobly_vision_mode = StringVar()
 dobly_vision_mode_choices = {'Extract RPU: Untouched': '-m 0',
                              'Extract RPU: MEL': '-m 1',
-                             'Extract RPU: Profile 8': '-m 2'}
+                             'Extract RPU: Profile 8.1': '-m 2',
+                             'Extract RPU: Profile 8.4': '-m 4'}
 dobly_vision_mode_menu_label = Label(dolby_frame, text="Parsing Mode :", background="#434547", foreground="white")
 dobly_vision_mode_menu_label.grid(row=1, column=0, columnspan=1, padx=10, pady=0, sticky=W + S)
 dobly_vision_mode_menu = OptionMenu(dolby_frame, dobly_vision_mode, *dobly_vision_mode_choices.keys())
 dobly_vision_mode_menu.config(background="#23272A", foreground="white", highlightthickness=1, width=18, anchor=W)
 dobly_vision_mode_menu.grid(row=2, column=0, columnspan=1, padx=10, pady=(5, 5), sticky=W + N)
-dobly_vision_mode.set('Extract RPU: Profile 8')
+dobly_vision_mode.set('Extract RPU: Profile 8.1')
 dobly_vision_mode_menu["menu"].configure(activebackground="dim grey")
 dobly_vision_mode_menu.bind("<Enter>", dobly_vision_mode_menu_hover)
 dobly_vision_mode_menu.bind("<Leave>", dobly_vision_mode_menu_hover_leave)
 
 
 # ---------------------------------------------------------------------------------------------- Dolby Vision Mode Menu
+
+# start code menu -----------------------------------------------------------------------------------------------------
+def start_code_menu_hover_enter(e):
+    start_code_menu["bg"] = "grey"
+    start_code_menu["activebackground"] = "grey"
+
+
+def start_code_menu_hover_leave(e):
+    start_code_menu["bg"] = "#23272A"
+
+
+start_code_mode = StringVar()
+start_code_mode_choices = {'Default': '',
+                           'Four': '--start-code four',
+                           'Annex-b': '--start-code annex-b'}
+start_code_menu_label = Label(dolby_frame, text="         HEVC NALU Start Code :", background="#434547",
+                              foreground="white")
+start_code_menu_label.grid(row=1, column=1, columnspan=1, padx=10, pady=0, sticky=S)
+start_code_menu = OptionMenu(dolby_frame, start_code_mode, *start_code_mode_choices.keys())
+start_code_menu.config(background="#23272A", foreground="white", highlightthickness=1, width=18, anchor=W)
+start_code_menu.grid(row=2, column=1, columnspan=1, padx=10, pady=(5, 5), sticky=N + E)
+start_code_mode.set('Default')
+start_code_menu["menu"].configure(activebackground="dim grey")
+start_code_menu.bind("<Enter>", start_code_menu_hover_enter)
+start_code_menu.bind("<Leave>", start_code_menu_hover_leave)
+
+
+# ----------------------------------------------------------------------------------------------------- start code menu
 
 # Input Button Functions ----------------------------------------------------------------------------------------------
 def check_for_hdr():  # Block of code to check for what type of HDR there is
@@ -473,6 +508,24 @@ def check_for_hdr():  # Block of code to check for what type of HDR there is
                         start_button.configure(state=NORMAL)
                         output_button.configure(state=NORMAL)
                         Hovertip(link_input_label, hdr_format_string.rstrip("\n"), hover_delay=600)
+                    else:  # if no dolby vision or HDR is detected
+                        messagebox.showinfo(title='Info', message='Input has no HDR10+ or Dolby Vision metadata, '
+                                                                  'no parsing needed')
+                        link_input_label.config(text='Input has no HDR10+ or Dolby Vision metadata, '
+                                                     'no parsing needed', anchor=CENTER)
+                        hdr_tool_tabs.select(hdr_frame)
+                        hdr_parse.set('off')
+                        dolbyvision_parse.set('off')
+                        start_button.configure(state=DISABLED)
+                        input_entry.configure(state=NORMAL)
+                        input_entry.delete(0, END)
+                        input_entry.configure(state=DISABLED)
+                        output_entry.configure(state=NORMAL)
+                        output_entry.delete(0, END)
+                        output_entry.configure(state=DISABLED)
+                        output_button.configure(state=DISABLED)
+                        Hovertip(link_input_label, 'Input has no HDR10+ or Dolby Vision, '
+                                                   'no parsing needed', hover_delay=600)
                 except TypeError:  # If input file has no HDR metadata to parse
                     hdr_format_string = track.other_hdr_format
                     if hdr_format_string is None:
@@ -709,12 +762,14 @@ def start_job():
                            + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb ' \
                              '-f hevc - -hide_banner -loglevel warning -stats|' \
                            + dolbyvision_tool + ' ' + dobly_vision_mode_choices[dobly_vision_mode.get()] \
-                           + dolbyvision_crop.get() + ' extract-rpu - -o ' + str(VideoOutputQuoted) + '"'
+                           + dolbyvision_crop.get() + start_code_mode_choices[start_code_mode.get()] \
+                           + ' extract-rpu - -o ' + str(VideoOutputQuoted) + '"'
         elif shell_options.get() == "Debug":
             finalcommand = '"' + ffmpeg + ' -analyzeduration 100M -probesize 50M -i ' + VideoInputQuoted \
                            + ' -map 0:v:0 -c:v:0 copy -vbsf hevc_mp4toannexb -f hevc - |' \
                            + dolbyvision_tool + ' ' + dobly_vision_mode_choices[dobly_vision_mode.get()] \
-                           + dolbyvision_crop.get() + ' extract-rpu - -o ' + str(VideoOutputQuoted) + '"'
+                           + dolbyvision_crop.get() + start_code_mode_choices[start_code_mode.get()] \
+                           + ' extract-rpu - -o ' + str(VideoOutputQuoted) + '"'
     if shell_options.get() == "Default":
         job = subprocess.Popen('cmd /c ' + finalcommand, universal_newlines=True,
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
