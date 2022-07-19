@@ -1,0 +1,2 @@
+pymediainfo==5.1.0
+tkinterdnd2==0.3.0
