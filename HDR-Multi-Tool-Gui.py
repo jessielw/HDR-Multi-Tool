@@ -11,7 +11,7 @@ from idlelib.tooltip import Hovertip
 from tkinter import *
 from tkinter import filedialog, StringVar, messagebox, ttk
 
-from TkinterDnD2 import *
+from tkinterdnd2 import TkinterDnD, DND_FILES
 from pymediainfo import MediaInfo
 
 from Packages.about import openaboutwindow
