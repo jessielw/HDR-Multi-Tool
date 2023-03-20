@@ -14,7 +14,7 @@ from tkinter import filedialog, StringVar, messagebox, ttk
 from tkinterdnd2 import TkinterDnD, DND_FILES
 from pymediainfo import MediaInfo
 
-from Packages.about import openaboutwindow
+from packages.about import openaboutwindow
 
 
 # Main Gui & Windows --------------------------------------------------------
@@ -32,7 +32,7 @@ def root_exit_function():  # Asks if user wants to close main GUI + close all ta
 
 
 root = TkinterDnD.Tk()  # Main GUI with TkinterDnD function (for drag and drop)
-root.title("HDR-Multi-Tool-Gui v1.35")
+root.title("HDR-Multi-Tool-Gui v1.36")
 root.iconphoto(True, PhotoImage(file="Runtime/Images/hdrgui.png"))
 root.configure(background="#434547")
 window_height = 400
@@ -91,7 +91,7 @@ class HoverButton(tk.Button):
 # -------------------------------------------------------------------------------------------------------------- Themes
 
 
-# Bundled Apps --------------------------------------------------------------------------------------------------------
+# Bundled apps --------------------------------------------------------------------------------------------------------
 config_file = 'Runtime/config.ini'  # Creates (if it doesn't exist) and defines location of config.ini
 config = ConfigParser()
 config.read(config_file)
@@ -247,19 +247,19 @@ if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bun
                                                      'automatically setting path to location.\n\n '
                                                      'Note: This can be changed in the config.ini file '
                                                      'or in the Options menu')
-        if pathlib.Path("Apps/ffmpeg/ffmpeg.exe").is_file():
+        if pathlib.Path("apps/ffmpeg/ffmpeg.exe").is_file():
             rem_ffmpeg = messagebox.askyesno(title='Delete Included ffmpeg?',
                                              message='Would you like to delete the included FFMPEG?')
             if rem_ffmpeg:
                 try:
-                    shutil.rmtree(str(pathlib.Path("Apps/ffmpeg")))
+                    shutil.rmtree(str(pathlib.Path("apps/ffmpeg")))
                 except (Exception,):
                     pass
         write_path_to_ffmpeg()
-    elif pathlib.Path("Apps/ffmpeg/ffmpeg.exe").is_file():
+    elif pathlib.Path("apps/ffmpeg/ffmpeg.exe").is_file():
         messagebox.showinfo(title='Info', message='Program will use the included '
-                                                  '"ffmpeg.exe" located in the "Apps" folder')
-        ffmpeg = str(pathlib.Path("Apps/ffmpeg/ffmpeg.exe"))
+                                                  '"ffmpeg.exe" located in the "apps" folder')
+        ffmpeg = str(pathlib.Path("apps/ffmpeg/ffmpeg.exe"))
         write_path_to_ffmpeg()
     else:
         error_prompt = messagebox.askyesno(title='Error!', message='Cannot find ffmpeg, '
@@ -277,17 +277,17 @@ if not pathlib.Path(ffmpeg.replace('"', '')).is_file():  # Checks config for bun
 
 if not pathlib.Path(hdr10plus_tool.replace('"', '')).is_file():  # Checks config for bundled app paths path
     # HDR10plus_tool -----------------------------------------------------------------------
-    if pathlib.Path('Apps/HDR10PlusTool/hdr10plus_tool.exe').is_file():
+    if pathlib.Path('apps/HDR10PlusTool/hdr10plus_tool.exe').is_file():
         messagebox.showinfo(title='Info', message='Program will use the included '
-                                                  '"hdr10plus_tool.exe" located in the "Apps" folder')
-        hdr10plus_tool = '"' + str(pathlib.Path('Apps/HDR10PlusTool/hdr10plus_tool.exe')) + '"'
+                                                  '"hdr10plus_tool.exe" located in the "apps" folder')
+        hdr10plus_tool = '"' + str(pathlib.Path('apps/HDR10PlusTool/hdr10plus_tool.exe')) + '"'
         try:
             config.set('hdr10plus_parser_path', 'path', hdr10plus_tool)
             with open(config_file, 'w') as configfile:
                 config.write(configfile)
         except (Exception,):
             pass
-    elif not pathlib.Path("Apps/HDR10PlusTool/hdr10plus_tool.exe").is_file():
+    elif not pathlib.Path("apps/HDR10PlusTool/hdr10plus_tool.exe").is_file():
         messagebox.showerror(title='Error!', message='Please download hdr10plus_tool.exe and set path to '
                                                      'hdr10plustool.exe in the Options menu')
         webbrowser.open('https://github.com/quietvoid/hdr10plus_tool/releases')
@@ -295,22 +295,22 @@ if not pathlib.Path(hdr10plus_tool.replace('"', '')).is_file():  # Checks config
 
 # dolbyvision_tool --------------------------------------------------------
 if not pathlib.Path(dolbyvision_tool.replace('"', '')).is_file():
-    if pathlib.Path('Apps/dovi_tool/dovi_tool.exe').is_file():
+    if pathlib.Path('apps/dovi_tool/dovi_tool.exe').is_file():
         messagebox.showinfo(title='Info', message='Program will use the included '
-                                                  '"dovi_tool.exe" located in the "Apps" folder')
-        dolbyvision_tool = '"' + str(pathlib.Path('Apps/dovi_tool/dovi_tool.exe')) + '"'
+                                                  '"dovi_tool.exe" located in the "apps" folder')
+        dolbyvision_tool = '"' + str(pathlib.Path('apps/dovi_tool/dovi_tool.exe')) + '"'
         try:
             config.set('dolbyvision_tool_path', 'path', dolbyvision_tool)
             with open(config_file, 'w') as configfile:
                 config.write(configfile)
         except (Exception,):
             pass
-    elif not pathlib.Path("Apps/dovi_tool/dovi_tool.exe").is_file():
+    elif not pathlib.Path("apps/dovi_tool/dovi_tool.exe").is_file():
         messagebox.showerror(title='Error!', message='Please download dovi_tool.exe and set path to '
                                                      'dovi_tool.exe in the Options menu')
         webbrowser.open('https://github.com/quietvoid/dovi_tool/releases')
     # dolbyvision_tool --------------------------------------------------------
-# -------------------------------------------------------------------------------------------------------- Bundled Apps
+# -------------------------------------------------------------------------------------------------------- Bundled apps
 
 # Frames --------------------------------------------------------------------------------------------------------------
 # Input Frame -------------------------------------------------------------------------------------------
@@ -428,14 +428,15 @@ def dobly_vision_mode_menu_hover_leave(e):
 dobly_vision_mode = StringVar()
 dobly_vision_mode_choices = {'Extract RPU: Untouched': '-m 0',
                              'Extract RPU: MEL': '-m 1',
-                             'Extract RPU: Profile 8.1': '-m 2',
+                             'Extract RPU: Profile 8.1 (removes mapping - Default)': '-m 2',
+                             'Extract RPU: Profile 8.1 (preserves mapping)': '-m 5',
                              'Extract RPU: Profile 8.4': '-m 4'}
 dobly_vision_mode_menu_label = Label(dolby_frame, text="Parsing Mode :", background="#434547", foreground="white")
 dobly_vision_mode_menu_label.grid(row=1, column=0, columnspan=1, padx=10, pady=0, sticky=W + S)
 dobly_vision_mode_menu = OptionMenu(dolby_frame, dobly_vision_mode, *dobly_vision_mode_choices.keys())
 dobly_vision_mode_menu.config(background="#23272A", foreground="white", highlightthickness=1, width=18, anchor=W)
 dobly_vision_mode_menu.grid(row=2, column=0, columnspan=1, padx=10, pady=(5, 5), sticky=W + N)
-dobly_vision_mode.set('Extract RPU: Profile 8.1')
+dobly_vision_mode.set('Extract RPU: Profile 8.1 (removes mapping - Default)')
 dobly_vision_mode_menu["menu"].configure(activebackground="dim grey")
 dobly_vision_mode_menu.bind("<Enter>", dobly_vision_mode_menu_hover)
 dobly_vision_mode_menu.bind("<Leave>", dobly_vision_mode_menu_hover_leave)
