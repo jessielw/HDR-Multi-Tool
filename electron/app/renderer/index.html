@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'"
+    />
+    <title>HDR Multi Tool</title>
+    <link rel="stylesheet" href="./css/index.css" />
+  </head>
+  <body>
+    <div id="container">
+      <div id="info-area">
+        <span id="info-area-span">
+          Open a Dolby Vision or HDR10+ compatible file
+        </span>
+      </div>
+
+      <div id="input-area" class="file-area">
+        <input
+          type="file"
+          id="hidden-open-file"
+          accept=".mkv, .mp4, .hevc, .ts"
+        />
+        <input
+          type="button"
+          value="Input"
+          id="open-file"
+          class="file-buttons"
+        />
+        <input type="text" id="open-file-text-box" class="text-box" readonly />
+      </div>
+
+      <div id="notebook-area">
+
+        <div id="tab-box">
+          <div class="tab tab-swap" id="hdr10-plus-tab">HDR10+</div>
+          <div class="tab" id="dv-tab">Dolby Vision</div>
+        </div>
+        <!-- Add more tabs as needed -->
+        
+        <div id="tab-content-area">
+
+          <!-- hdr tab -->
+          <div id="hdr10-plus-tab-content" class="tab-content">
+            <div id="hdr10plus-check-box-div" class="check-button-div">
+              <label for="hdr10plus-check-box">Parse HDR10+</label>
+              <input type="checkbox" id="hdr10plus-check-box" name="hdr10plus-check-box" value="1">
+            </div>
+          </div>
+
+          <!-- dv tab -->
+          <div id="dv-tab-content" class="tab-content">
+
+            <div id="dv-check-box-div" class="check-button-div">
+              <label for="dv-check-box">Parse Dolby Vision</label>
+              <input type="checkbox" id="dv-check-box" name="dv-check-box" value="1">
+            </div>
+
+            <div id="dv-check-box-div-crop" class="check-button-div">
+              <label for="dv-crop-box">Cropped Encode</label>
+              <input type="checkbox" id="dv-crop-box" name="dv-crop-box" value="-c">
+            </div>    
+            
+            <div id="dv-rpu-extract-mode" class="menu-div">
+              <label for="rpu-extract-mode">RPU Extract Mode</label>
+              <select id="rpu-extract-mode" class="menu-selection" name="rpu-extract-mode">
+                <option value="-m 2">Profile 8.1: Remove Mapping (Default)</option>
+                <option value="-m 5">Profile 8.1: Preserves Mapping</option>
+                <option value="-m 4">Profile 8.4</option>                  
+                <option value="-m 1">MEL</option>
+                <option value="-m 0">Untouched</option>
+              </select> 
+            </div>         
+            
+            
+            <div id="dv-hevc-nalu" class="menu-div">
+              <label for="hevc-nalu">RPU Extract Mode</label>
+              <select id="hevc-nalu" class="menu-selection" name="hevc-nalu">
+                <option value="">Default</option>
+                <option value="--start-code four">Four</option>
+                <option value="--start-code annex-b">Annex-B</option>            
+              </select>
+            </div>   
+
+          </div>     
+
+        </div>  
+
+      </div>
+
+
+      <div id="output-area" class="file-area">
+        <input
+          type="file"
+          id="hidden-open-file"
+          accept=".mkv, .mp4, .hevc, .ts"
+        />
+        <input
+          type="button"
+          value="Output"
+          id="open-file"
+          class="file-buttons"
+        />
+        <input type="text" id="save-file-text-box" class="text-box text-box-out" readonly />
+        <!-- <input
+          type="button"
+          value="Start Job"
+          id="open-file"
+          class="file-buttons button-out"
+        />         -->
+        <!-- TODO need to toggle the removal of button-out-disabled when enabled and also add button-out-hover -->
+        <a id="start-job-button" href="#" class="file-buttons button-out button-out-disabled">
+          <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M320-200v-560l440 280-440 280Zm80-280Zm0 134 210-134-210-134v268Z"/></svg>
+        </a>
+        
+      </div>
+
+
+    </div>
+    <script src="./js/renderer.js"></script>
+  </body>
+</html>
