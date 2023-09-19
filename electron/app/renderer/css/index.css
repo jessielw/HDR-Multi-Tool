@@ -17,8 +17,14 @@ body {
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: row;
+  padding: 3px;
+}
+
+#input-panel {
+  display: flex;
   flex-direction: column;
-  padding: 2px;
+  flex: 1;
 }
 
 #info-area {
@@ -26,6 +32,10 @@ body {
   width: 100%;
   display: flex;
   justify-content: center;
+  border: solid 1px #707070;
+  border-radius: 5px;
+  background-color: #282c34;
+  position: relative;
 }
 
 #info-area-span {
@@ -34,11 +44,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: solid 1px #707070;
-  border-radius: 5px;
-  background-color: #282c34;
   color: lightgrey;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+}
+
+#job-panel {
+  height: 100%;
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+}
+
+#job-panel-button {
+  fill: lightgrey;
+  height: 75%;
+  max-height: 20px;
+}
+
+#job-panel-button:hover {
+  fill: #3498db;
+  transition-duration: 0.1s;
+}
+
+.job-panel-rotate {
+  transform: rotate(180deg);
 }
 
 .file-area {
@@ -60,18 +90,25 @@ body {
   min-height: 25px;
   max-height: 35px;
   width: 90px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   color: lightgrey;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   background-color: #35383f;
   border: 1px solid grey;
   transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
   border-radius: 6px;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  padding: 2px 10px;
   font-size: clamp(0.9rem, 1vw, 0.95rem);
   cursor: pointer;
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.25);
+  fill: lightgrey;
+}
+
+#open-file,
+#save-file {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .button-out {
@@ -120,99 +157,87 @@ body {
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
   margin-left: 1px;
-  margin-right: 1px;
 }
 
 .text-box-out {
   border-radius: 0;
 }
 
-#notebook-area {
-  height: 68%;
+#settings-area {
+  flex: 1;
   width: 100%;
   margin-top: 3px;
   align-self: center;
-  border: solid 1px #707070;
-  border-radius: 5px;
-  overflow: hidden;
-  background-color: #282c34;
 }
 
-#tab-box {
-  height: 15%;
-  width: 100%;
-  display: flex;
-  background-color: #3a3f48;
-  margin-bottom: auto;
-}
-
-.tab {
+#settings-content-area {
   height: 100%;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 0 15px;
-  color: lightgrey;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  background-color: #35383f;
-  border: 1px solid rgb(37, 36, 36);
-  font-size: 0.85rem;
-}
-
-.tab:hover {
-  color: #3498db;
-}
-
-#tab-content-area {
-  height: 85%;
   width: 100%;
   display: flex;
+  column-gap: 4px;
 }
 
 .tab-content {
   width: calc(100% - 6px);
-  height: calc(100% - 6px);
-  display: none;
-  grid-template-columns: 50% 50%;
-  grid-template-rows: repeat(5, 20%);
-  margin: 3px;
-}
-
-.tab-swap {
-  background-color: #282c34;
-  color: #3498db;
-  border-bottom: 0px;
-}
-
-#hdr10-plus-tab {
-  margin-left: 3px;
-}
-
-#hdr10-plus-tab-content {
-  display: grid;
-}
-
-.check-button-div {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   display: flex;
-  align-items: center;
+  /* display: none; */
+  flex-direction: column;
+  border: solid 1px grey;
+  border-radius: 5px;
+  background-color: #35383f;
+  overflow: hidden;
 }
 
-.check-button-div label {
+.hdr-check-button-div {
+  width: 100%;
+  height: 15%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #282c34;
+  border-bottom: solid 1px grey;
+}
+
+.hdr-check-button-div label {
   font-size: 0.8rem;
   color: lightgrey;
 }
 
-#dv-check-box-div-crop {
-  justify-content: flex-end;
+.hdr-body {
+  width: calc(100% - 6px);
+  height: calc(85% - 3px);
+  padding: 3px;
+  display: grid;
+  grid-template-columns: 50% 50%;
+  grid-template-rows: repeat(4, 25%);
+  column-gap: 3px;
+  align-content: center;
+  align-self: center;
+}
+
+.hdr-body-positioning {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-self: center;
+  align-self: center;
+}
+
+.check-button-div {
+  color: lightgrey;
+  font-size: 0.825rem;
 }
 
 .menu-div {
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   font-size: 0.8rem;
   color: lightgrey;
+  justify-content: center;
 }
 
 .menu-div label {
@@ -220,13 +245,11 @@ body {
 }
 
 .menu-selection {
-  width: 60%;
+  width: 100%;
+  max-width: 150px;
   border-radius: 3px;
   color: lightgrey;
-  background-color: #3a3f48;
+  background-color: #2c313a;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
   font-size: 0.85rem;
-}
-
-#dv-hevc-nalu {
-  align-items: flex-end;
 }
