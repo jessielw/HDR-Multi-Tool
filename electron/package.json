@@ -1,10 +1,12 @@
 {
-  "name": "electron",
+  "name": "hdr-multi-tool",
   "version": "2.0.0",
   "description": "A graphical user interface for parsing HDR10+ and Dolby Vision",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "repository": {
     "type": "git",
@@ -27,7 +29,18 @@
   },
   "homepage": "https://github.com/jlw4049/HDR-Multi-Tool-Gui#readme",
   "devDependencies": {
-    "electron": "^26.2.1",
-    "mediainfo.js": "^0.2.1"
+    "@electron-forge/cli": "^6.4.2",
+    "@electron-forge/maker-deb": "^6.4.2",
+    "@electron-forge/maker-rpm": "^6.4.2",
+    "@electron-forge/maker-squirrel": "^6.4.2",
+    "@electron-forge/maker-zip": "^6.4.2",
+    "@electron-forge/plugin-auto-unpack-natives": "^6.4.2",
+    "electron": "26.2.1"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.1.0",
+    "mediainfo.js": "^0.2.1",
+    "which": "^4.0.0"
   }
 }
