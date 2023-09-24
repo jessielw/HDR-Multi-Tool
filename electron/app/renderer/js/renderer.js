@@ -1,4 +1,5 @@
 // main ui
+const mainPanel = document.getElementById("input-panel");
 const infoArea = document.getElementById("info-area-span");
 const openFileBtn = document.getElementById("open-file");
 const inputTextBox = document.getElementById("open-file-text-box");
@@ -19,6 +20,10 @@ const queuePanel = document.getElementById("queue-panel");
 const queueBox = document.getElementById("queue-listbox");
 const deleteButton = document.getElementById("delete-job-button");
 const startJobButton = document.getElementById("start-job-button");
+
+// about ui
+const aboutPanel = document.getElementById("about-panel");
+const closeAboutButton = document.getElementById("close-about");
 
 // detect and define default colors
 const defaultDropColor = openFileBtn.style.backgroundColor;
@@ -474,4 +479,15 @@ ipcRenderer.on("job-complete-current", (job) => {
 ipcRenderer.on("job-complete", (arg) => {
   // outputTextBox.value = arg.filePath.baseName;
   // outputPath = arg.filePath.path;
+});
+
+// about panel control
+ipcRenderer.on("open-about", () => {
+  mainPanel.style.display = "none";
+  aboutPanel.style.display = "flex";
+});
+
+closeAboutButton.addEventListener("click", function () {
+  mainPanel.style.display = "flex";
+  aboutPanel.style.display = "none";
 });

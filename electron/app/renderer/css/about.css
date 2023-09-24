@@ -1,0 +1,41 @@
+#about-panel {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  margin: 20px;
+  border: solid 1px #707070;
+  border-radius: 5px;
+  background-color: #35383f;
+  overflow: hidden;
+}
+
+#about-header {
+  height: 10%;
+  display: flex;
+  padding: 0 10px;
+  align-items: center;
+  background-color: #20242a;
+  color: lightgrey;
+  font-size: 0.95rem;
+  position: relative;
+}
+
+#close-about {
+  position: absolute;
+  right: 0;
+  fill: #e1401d;
+  cursor: pointer;
+}
+
+#close-about:hover {
+  fill: #3498db;
+}
+
+#about-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  color: lightgrey;
+  font-size: 0.9rem;
+  overflow-y: auto;
+}
