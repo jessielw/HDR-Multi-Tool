@@ -28,6 +28,17 @@ module.exports = (root) => {
         },
       ],
     },
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "About",
+          click: async () => {
+            root.webContents.send("open-about");
+          },
+        },
+      ],
+    },
     // Add more menu items and submenus as needed
   ];
 
