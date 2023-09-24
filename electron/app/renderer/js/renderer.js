@@ -1,34 +1,77 @@
+// main ui
 const infoArea = document.getElementById("info-area-span");
 const openFileBtn = document.getElementById("open-file");
 const hiddenOpenFileBtn = document.getElementById("hidden-open-file");
 const inputTextBox = document.getElementById("open-file-text-box");
 const hdr10PlusCheckBox = document.getElementById("hdr10plus-check-box");
+const hdr10PlusContent = document.getElementById("hdr10-plus-content");
+const dVContent = document.getElementById("dv-content");
 const dVCheckBox = document.getElementById("dv-check-box");
+const dVCropBox = document.getElementById("dv-crop-box");
+const dVRpuExtractMode = document.getElementById("rpu-extract-mode");
+const dVHevcNaluCode = document.getElementById("hevc-nalu");
+const outputFileBtn = document.getElementById("save-file");
 const outputTextBox = document.getElementById("save-file-text-box");
+const addJobButton = document.getElementById("add-job-button");
+
+// queue panel
+const queuePanelButton = document.getElementById("job-panel-button");
+const queuePanel = document.getElementById("queue-panel");
+const queueBox = document.getElementById("queue-listbox");
+const deleteButton = document.getElementById("delete-job-button");
 const startJobButton = document.getElementById("start-job-button");
 
 // detect and define default colors
 const defaultDropColor = openFileBtn.style.backgroundColor;
 const defaultInfoColor = infoArea.style.color;
 
+// request tool paths from the main process
+let doviToolPath;
+let hdrToolPath;
+let ffmpegToolPath;
+ipcRenderer.invoke("get-tool-paths").then((toolPaths) => {
+  doviToolPath = toolPaths.doviToolPath;
+  hdrToolPath = toolPaths.hdrToolPath;
+  ffmpegToolPath = toolPaths.ffmpegToolPath;
+  
+  console.log(doviToolPath);
+}).catch((error) => {
+  console.error(error);
+});
+
 let mediaInfoObject;
+let fileSize;
+let videoTrackDuration;
 let dolbyVision;
 let hdr10Plus;
 let invalidHdrSelection = false;
+let inputFileName;
+let inputPathParent;
 let inputPath;
 let outputExt;
 let outputPath;
 
 function resetGui() {
   mediaInfoObject = undefined;
+  fileSize = undefined;
+  videoTrackDuration = undefined;
   dolbyVision = undefined;
   hdr10Plus = undefined;
   invalidHdrSelection = false;
+  inputFileName = undefined;
+  inputPathParent = undefined;
   inputPath = undefined;
   outputExt = undefined;
   outputPath = undefined;
-  inputTextBox.value = '';
-  outputTextBox.value = '';
+  inputTextBox.value = "";
+  outputTextBox.value = "";
+
+  // fully default ui
+  infoArea.innerText = "Open a Dolby Vision or HDR10+ compatible file";
+  hdr10PlusContent.style.display = "none";
+  dVContent.style.display = "none";
+  outputFileBtn.classList.add("button-out-disabled");
+  outputFileBtn.classList.remove("file-buttons-hover");
 }
 
 async function acceptInputFile(filePath) {
@@ -59,25 +102,44 @@ async function acceptInputFile(filePath) {
     );
     mediaInfoObject = mediaInfoObjectParsed;
 
+    const generalTrackObject = findGeneralTrack(mediaInfoObject.media.track);
+
+    if (!generalTrackObject) {
+      infoArea.innerText = "Input does not have a general track";
+      infoArea.style.color = "#e1401d";
+      return;
+    } else {
+      fileSize = generalTrackObject.FileSize;
+    }
+
     const videoTrackObject = findVideoTrack(mediaInfoObject.media.track);
 
     if (!videoTrackObject) {
       infoArea.innerText = "Input does not have a video track";
       infoArea.style.color = "#e1401d";
       return;
+    } else {
+      const getVideoTrackDuration = videoTrackObject.Duration;
+      if (getVideoTrackDuration) {
+        videoTrackDuration = parseFloat(getVideoTrackDuration);
+      }
     }
 
-    // Update input var
+    // Update input vars
+    inputFileName = baseName;
+    inputPathParent = dirName;
     inputPath = path;
 
     // Update text box with file's base name
-    inputTextBox.value = baseName; 
+    inputTextBox.value = baseName;
 
     const hdrString = getHdrString(videoTrackObject);
 
     if (!hdrString) {
       infoArea.innerText =
         "Video track does not contain HDR/Dolby Vision metadata";
+      infoArea.style.color = "#e1401d";
+      return;
     } else {
       infoArea.innerText = hdrString;
       infoArea.style.color = "#c0cbd3";
@@ -92,28 +154,53 @@ async function acceptInputFile(filePath) {
       }
     }
 
-    if (dolbyVision) {
-      dvTab.click();
+    if (dolbyVision && hdr10Plus) {
       hdr10PlusCheckBox.checked = false;
+      hdr10PlusContent.style.display = "flex";
+      dVContent.style.display = "flex";
+      dVCheckBox.checked = true;
+      outputExt = ".bin";
+    } else if (dolbyVision) {
+      hdr10PlusCheckBox.checked = false;
+      hdr10PlusContent.style.display = "none";
+      dVContent.style.display = "flex";
       dVCheckBox.checked = true;
       outputExt = ".bin";
     } else if (hdr10Plus) {
-      hdr10Tab.click();
       dVCheckBox.checked = false;
+      dVContent.style.display = "none";
       hdr10PlusCheckBox.checked = true;
-      outputExt = '.json';
-    } 
-    
-    enableDisableStart();
+      outputExt = ".json";
+    }
 
+    // enable output button
+    outputFileBtn.classList.remove("button-out-disabled");
+    outputFileBtn.classList.add("file-buttons-hover");
+
+    enableDisableAddJob();
   } catch (error) {
     console.error(error);
   }
 }
 
+// output button
+outputFileBtn.addEventListener("click", function () {
+  if (outputFileBtn.classList.contains("file-buttons-hover")) {
+    ipcRenderer.send("show-save-dialog", {
+      defaultPath: inputPath,
+      outputExtension: [outputExt.replace(".", "")],
+      allFiles: false,
+    });
+  }
+});
+
+ipcRenderer.on("save-dialog-success", (arg) => {
+  outputTextBox.value = arg.filePath.baseName;
+  outputPath = arg.filePath.path;
+});
 
 // enable and disable opposing checkbox's
-hdr10PlusCheckBox.addEventListener("change", function() {
+hdr10PlusCheckBox.addEventListener("change", function () {
   if (this.checked) {
     dVCheckBox.checked = false;
 
@@ -124,10 +211,10 @@ hdr10PlusCheckBox.addEventListener("change", function() {
     }
   }
   outputExt = ".json";
-  enableDisableStart();
-})
+  enableDisableAddJob();
+});
 
-dVCheckBox.addEventListener("change", function() {
+dVCheckBox.addEventListener("change", function () {
   if (this.checked) {
     hdr10PlusCheckBox.checked = false;
 
@@ -135,55 +222,49 @@ dVCheckBox.addEventListener("change", function() {
       invalidHdrSelection = false;
     } else {
       invalidHdrSelection = true;
-    }    
+    }
   }
   outputExt = ".bin";
-  enableDisableStart();
-})
+  enableDisableAddJob();
+});
 
-
-async function enableDisableStart() {
+async function enableDisableAddJob() {
   if (invalidHdrSelection) {
-    infoArea.innerText =
-      "Invalid HDR Selection for Input";    
+    infoArea.innerText = "Invalid HDR Selection for Input";
     infoArea.style.color = "#e1401d";
   } else {
-    
     if (outputExt) {
-    try {
-      const newOutput = await ipcRenderer.invoke(
-        "change-extension",
-        inputPath,
-        outputExt
-      );
-      outputTextBox.value = newOutput.baseName;
-      outputPath = newOutput.path;   
-    } catch (error) {
-      console.log(error);
+      try {
+        const newOutput = await ipcRenderer.invoke(
+          "change-extension",
+          inputPath,
+          outputExt
+        );
+        outputTextBox.value = newOutput.baseName;
+        outputPath = newOutput.path;
+      } catch (error) {
+        console.log(error);
+      }
     }
-  }};
+  }
 
-  if (inputPath && (hdr10PlusCheckBox.checked || dVCheckBox.checked) && !invalidHdrSelection && outputPath) {
-    startJobButton.classList.remove("button-out-disabled");
+  if (
+    inputPath &&
+    (hdr10PlusCheckBox.checked || dVCheckBox.checked) &&
+    !invalidHdrSelection &&
+    outputPath
+  ) {
+    addJobButton.classList.add("button-out-hover");
+    addJobButton.classList.remove("button-out-disabled");
   } else {
-    startJobButton.classList.add("button-out-disabled");
-  };
-};
+    addJobButton.classList.add("button-out-disabled");
+    addJobButton.classList.remove("button-out-hover");
+  }
+}
 
-// loop to enable/disable start button as needed
-// setInterval(function () {
-//   if (inputPath && (hdr10PlusCheckBox.checked || dVCheckBox.checked) && !invalidHdrSelection) {
-//     startJobButton.classList.remove("button-out-disabled");
-//   } else {
-//     startJobButton.classList.add("button-out-disabled");
-//   }
-
-//   if (invalidHdrSelection) {
-//     infoArea.innerText =
-//       "Invalid HDR Selection for Input";    
-//     infoArea.style.color = "#e1401d";
-//   }
-// }, 100);
+function findGeneralTrack(trackArray) {
+  return trackArray.find((track) => track["@type"] === "General");
+}
 
 function findVideoTrack(trackArray) {
   return trackArray.find((track) => track["@type"] === "Video");
@@ -238,40 +319,155 @@ hiddenOpenFileBtn.addEventListener("change", async function (event) {
   });
 });
 
-// function updateOutputName(baseName, outputExt, dirName) {
+// start job
+addJobButton.addEventListener("click", async function () {
+  let hdrBaseCommand = [
+    ffmpegToolPath,
+    "-analyzeduration",
+    "100M",
+    "-probesize",
+    "50M",
+    "-i",
+    inputPath,
+    "-map",
+    "0:v:0",
+    "-c:v:0",
+    "copy",
+    "-vbsf",
+    "hevc_mp4toannexb",
+    "-f",
+    "hevc",
+    "-",
+    "-hide_banner",
+    "-loglevel",
+    "warning",
+    "-stats",
+    "|",
+  ];
 
+  if (hdr10PlusCheckBox.checked) {
+    // to do impliment command
+  } else if (dVCheckBox.checked) {
+    // TODO actually detect/map FFMPEG
+    // TODO actually detect/map both HDR executables
+    hdrBaseCommand.push(doviToolPath);
+    dVRpuExtractMode.value.split(" ").forEach((element) => {
+      if (element) {
+        hdrBaseCommand.push(element);
+      }
+    });
+    dVHevcNaluCode.value.split(" ").forEach((element) => {
+      if (element) {
+        hdrBaseCommand.push(element);
+      }
+    });
+    if (dVCropBox.checked) {
+      hdrBaseCommand.push(dVCropBox.value);
+    }
+    hdrBaseCommand.push("extract-rpu");
+    hdrBaseCommand.push("-");
+    hdrBaseCommand.push("-o");
+    hdrBaseCommand.push(outputPath);
 
-//   let outPutPathName = baseName.slice(0, -4) + outputExt;
-//   outputTextBox.value = outPutPathName;
-//   outputPath = dirName + outPutPathName;  
-//   console.log(outputPath);
-// }
+    // console.log(hdrBaseCommand);
 
-// notebook tabs
-const notebookArea = document.getElementById("notebook-area");
-const hdr10Tab = document.getElementById("hdr10-plus-tab");
-const dvTab = document.getElementById("dv-tab");
+    const addJob = await ipcRenderer.invoke("add-job", {
+      fileName: inputFileName,
+      command: hdrBaseCommand,
+    });
+    if (addJob) {
+      const newJob = document.createElement("option");
+      // newJob.id = `id-${addJob.currentJob} status-incomplete`;
+      newJob.id = `job-id-${addJob.currentJob}`;
+      newJob.value = addJob.jobName;
+      newJob.textContent = addJob.jobName;
+      queueBox.appendChild(newJob);
 
-const hdr10TabContent = document.getElementById("hdr10-plus-tab-content");
-const dvTabContent = document.getElementById("dv-tab-content");
+      // open queue panel if not already opened
+      const currentPanelStatus = window.getComputedStyle(queuePanel);
+      if (currentPanelStatus.getPropertyValue("display") === "none") {
+        queuePanelButton.classList.add("job-panel-rotate");
+        queuePanel.style.display = "block";
+      }
 
-
-// var currentTab = hdr10Tab.id;
-
-
-hdr10Tab.addEventListener("click", function () {
-  dvTabContent.style.display = "none";
-  dvTab.classList.remove("tab-swap");
-  hdr10TabContent.style.display = "grid";
-  hdr10Tab.classList.add("tab-swap");
-  // currentTab = this.id;
+      // reset main ui
+      resetGui();
+      addJobButton.classList.add("button-out-disabled");
+      addJobButton.classList.remove("button-out-hover");
+    }
+  }
 });
 
-dvTab.addEventListener("click", function () {
-  hdr10TabContent.style.display = "none";
-  hdr10Tab.classList.remove("tab-swap");
-  dvTabContent.style.display = "grid";
-  dvTab.classList.add("tab-swap");
-  // currentTab = this.id;
+// queue panel
+queuePanelButton.addEventListener("click", function () {
+  const computedStyle = window.getComputedStyle(queuePanel);
+  if (computedStyle.getPropertyValue("display") === "none") {
+    queuePanelButton.classList.add("job-panel-rotate");
+    queuePanel.style.display = "block";
+  } else {
+    queuePanelButton.classList.remove("job-panel-rotate");
+    queuePanel.style.display = "none";
+  }
 });
 
+deleteButton.addEventListener("click", function () {
+  // Get an array of selected options
+  const selectedOptions = Array.from(queueBox.selectedOptions);
+
+  // Check if any options are selected
+  if (selectedOptions.length > 0) {
+    // Remove each selected option
+    selectedOptions.forEach((option) => {
+      if (!option.disabled) {
+        ipcRenderer.send("remove-job-from-queue", option.id);
+        queueBox.remove(option.index);
+      }
+    });
+  } else {
+    ipcRenderer.send("show-message-prompt", [
+      "Information",
+      "You must select a job first",
+    ]);
+  }
+});
+
+startJobButton.addEventListener("click", function () {
+  // Check if any options are selected
+  if (queueBox.options.length > 0) {
+    // startJobSVG.classList.add("button-out-disabled");
+    // console.log(startJobButton.nextSibling);
+    ipcRenderer.send("start-queue");
+  } else {
+    ipcRenderer.send("show-message-prompt", [
+      "Information",
+      "Queue has no jobs to process",
+    ]);
+  }
+});
+
+ipcRenderer.on("job-update-current", (job) => {
+  const selectedOption = queueBox.querySelector(
+    `option[id="job-id-${job.currentJob}"]`
+  );
+
+  if (selectedOption) {
+    selectedOption.disabled = true;
+    selectedOption.style.color = "#2e7d32";
+  }
+});
+
+ipcRenderer.on("job-complete-current", (job) => {
+  const selectedOption = queueBox.querySelector(
+    `option[id="job-id-${job.currentJob}"]`
+  );
+
+  if (selectedOption) {
+    queueBox.remove(selectedOption);
+  }
+});
+
+// TODO maybe close panel or something when the jobs are completed
+ipcRenderer.on("job-complete", (arg) => {
+  // outputTextBox.value = arg.filePath.baseName;
+  // outputPath = arg.filePath.path;
+});
