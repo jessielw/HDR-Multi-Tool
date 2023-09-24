@@ -5,6 +5,7 @@ const getPathObject = function (file) {
     dirName: path.normalize(path.dirname(file)),
     path: path.normalize(path.resolve(file)),
     baseName: path.basename(file),
+    baseNameNoExt: path.parse(file).name,
     ext: path.extname(file),
   };
 };
