@@ -81,7 +81,7 @@ body {
   align-items: center;
 }
 
-#hidden-open-file {
+.hidden-input-button {
   display: none;
 }
 
@@ -128,9 +128,10 @@ body {
 
 .button-out-disabled {
   fill: grey;
+  color: grey;
 }
 
-.file-buttons:hover {
+.file-buttons-hover:hover {
   color: #3498db;
   transition-duration: 0.1s;
 }
