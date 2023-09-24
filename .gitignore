@@ -7,7 +7,10 @@ HDR10PlusParser.spec
 config.ini
 *.exe
 *.zip
-
+.vscode/
+app_config/
+forge.config.js
+test.js
 
 # Logs
 logs
@@ -139,4 +142,3 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-.vscode/settings.json
