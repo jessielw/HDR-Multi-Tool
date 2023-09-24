@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const { checkDependencies } = require("./app/main/detectFilePaths.js");
 const os = require("os");
@@ -41,6 +41,9 @@ async function createWindow() {
     }
   });
 
+  // customize menu bar
+  require("./app/main/customMenu.js")(root);
+
   // Load app
   root.loadFile(path.join(__dirname, "/app/renderer/index.html"));
 
@@ -49,6 +52,7 @@ async function createWindow() {
     root.webContents.openDevTools();
   }
 
+  require("./app/main/ipc_handlers/ipcFileHandlers.js");
   require("./app/main/ipc_handlers/ipcHandlers.js");
   require("./app/main/ipc_handlers/ipcJobHandler.js")(root);
 }

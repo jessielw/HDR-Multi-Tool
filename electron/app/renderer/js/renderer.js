@@ -1,7 +1,6 @@
 // main ui
 const infoArea = document.getElementById("info-area-span");
 const openFileBtn = document.getElementById("open-file");
-const hiddenOpenFileBtn = document.getElementById("hidden-open-file");
 const inputTextBox = document.getElementById("open-file-text-box");
 const hdr10PlusCheckBox = document.getElementById("hdr10plus-check-box");
 const hdr10PlusContent = document.getElementById("hdr10-plus-content");
@@ -29,15 +28,18 @@ const defaultInfoColor = infoArea.style.color;
 let doviToolPath;
 let hdrToolPath;
 let ffmpegToolPath;
-ipcRenderer.invoke("get-tool-paths").then((toolPaths) => {
-  doviToolPath = toolPaths.doviToolPath;
-  hdrToolPath = toolPaths.hdrToolPath;
-  ffmpegToolPath = toolPaths.ffmpegToolPath;
-  
-  console.log(doviToolPath);
-}).catch((error) => {
-  console.error(error);
-});
+ipcRenderer
+  .invoke("get-tool-paths")
+  .then((toolPaths) => {
+    doviToolPath = toolPaths.doviToolPath;
+    hdrToolPath = toolPaths.hdrToolPath;
+    ffmpegToolPath = toolPaths.ffmpegToolPath;
+
+    console.log(doviToolPath);
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 let mediaInfoObject;
 let fileSize;
@@ -292,12 +294,14 @@ function checkHdrTypes(hdrString) {
 }
 
 openFileBtn.addEventListener("click", function () {
-  hiddenOpenFileBtn.click();
+  ipcRenderer.send("show-open-dialog");
 });
 
-hiddenOpenFileBtn.addEventListener("change", async function (event) {
-  var filePath = event.target.files[0]["path"];
-  acceptInputFile(filePath);
+ipcRenderer.on("return-open-dialog", (filePaths) => {
+  if (filePaths && filePaths.length > 0) {
+    const selectedFilePath = filePaths[0];
+    acceptInputFile(selectedFilePath);
+  }
 });
 
 [openFileBtn, inputTextBox].forEach((dropArea) => {
