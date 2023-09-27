@@ -5,6 +5,12 @@ const openFileBtn = document.getElementById("open-file");
 const inputTextBox = document.getElementById("open-file-text-box");
 const hdr10PlusCheckBox = document.getElementById("hdr10plus-check-box");
 const hdr10PlusContent = document.getElementById("hdr10-plus-content");
+const hdr10PlusSkipValidation = document.getElementById(
+  "hdr10-plus-skip-validation"
+);
+const hdr10PlusSkipReOrder = document.getElementById(
+  "hdr10-plus-skip-re-order"
+);
 const dVContent = document.getElementById("dv-content");
 const dVCheckBox = document.getElementById("dv-check-box");
 const dVCropBox = document.getElementById("dv-crop-box");
@@ -361,8 +367,23 @@ addJobButton.addEventListener("click", async function () {
 
   let pipe2 = [];
 
+  // hdr10plus
   if (hdr10PlusCheckBox.checked) {
-    // to do impliment command
+    pipe2.push(hdrToolPath);
+    if (hdr10PlusSkipValidation.checked) {
+      pipe2.push(hdr10PlusSkipValidation.value);
+    }
+    let skipReOrder;
+    if (hdr10PlusSkipReOrder.checked) {
+      skipReOrder = hdr10PlusSkipReOrder.value;
+    }
+    ["extract", skipReOrder, "-o", outputPath, "-"].forEach((element) => {
+      if (element) {
+        pipe2.push(element);
+      }
+    });
+
+    // dolby vision
   } else if (dVCheckBox.checked) {
     pipe2.push(doviToolPath);
     dVRpuExtractMode.value.split(" ").forEach((element) => {
@@ -378,11 +399,12 @@ addJobButton.addEventListener("click", async function () {
     if (dVCropBox.checked) {
       pipe2.push(dVCropBox.value);
     }
-    pipe2.push("extract-rpu");
-    pipe2.push("-");
-    pipe2.push("-o");
-    pipe2.push(outputPath);
+    ["extract-rpu", "-", "-o", outputPath].forEach((element) => {
+      pipe2.push(element);
+    });
+  }
 
+  if (hdr10PlusCheckBox.checked || dVCheckBox.checked) {
     const addJob = await ipcRenderer.invoke("add-job", {
       fileName: inputFileName,
       pipe1: pipe1,
