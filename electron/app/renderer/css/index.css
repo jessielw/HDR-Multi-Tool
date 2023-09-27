@@ -96,7 +96,7 @@ body {
   color: lightgrey;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   background-color: #35383f;
-  border: 1px solid grey;
+  border: 2px ridge grey;
   transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
   border-radius: 6px;
   font-size: clamp(0.9rem, 1vw, 0.95rem);
@@ -162,6 +162,7 @@ body {
 
 .text-box-out {
   border-radius: 0;
+  margin-right: 1px;
 }
 
 #settings-area {
@@ -181,8 +182,8 @@ body {
 .tab-content {
   width: calc(100% - 6px);
   flex: 1;
-  display: flex;
-  /* display: none; */
+  /* display: flex; */
+  display: none;
   flex-direction: column;
   border: solid 1px grey;
   border-radius: 5px;
