@@ -20,6 +20,13 @@ const queuePanel = document.getElementById("queue-panel");
 const queueBox = document.getElementById("queue-listbox");
 const deleteButton = document.getElementById("delete-job-button");
 const startJobButton = document.getElementById("start-job-button");
+const queuePanelProgressBox = document.getElementById("queue-progress-bar-box");
+const queuePanelProgressBar = document.getElementById("queue-progress-bar");
+const queuePanelProgressBarText = document.getElementById(
+  "queue-progress-text"
+);
+let jobProgress = 0;
+const maxJobProgress = 100;
 
 // about ui
 const aboutPanel = document.getElementById("about-panel");
@@ -39,8 +46,6 @@ ipcRenderer
     doviToolPath = toolPaths.doviToolPath;
     hdrToolPath = toolPaths.hdrToolPath;
     ffmpegToolPath = toolPaths.ffmpegToolPath;
-
-    console.log(doviToolPath);
   })
   .catch((error) => {
     console.error(error);
@@ -48,7 +53,7 @@ ipcRenderer
 
 let mediaInfoObject;
 let fileSize;
-let videoTrackDuration;
+let videoTrackFrameCount;
 let dolbyVision;
 let hdr10Plus;
 let invalidHdrSelection = false;
@@ -61,7 +66,7 @@ let outputPath;
 function resetGui() {
   mediaInfoObject = undefined;
   fileSize = undefined;
-  videoTrackDuration = undefined;
+  videoTrackFrameCount = undefined;
   dolbyVision = undefined;
   hdr10Plus = undefined;
   invalidHdrSelection = false;
@@ -126,9 +131,10 @@ async function acceptInputFile(filePath) {
       infoArea.style.color = "#e1401d";
       return;
     } else {
-      const getVideoTrackDuration = videoTrackObject.Duration;
-      if (getVideoTrackDuration) {
-        videoTrackDuration = parseFloat(getVideoTrackDuration);
+      const getVideoFrameCount = videoTrackObject.FrameCount;
+
+      if (getVideoFrameCount) {
+        videoTrackFrameCount = getVideoFrameCount;
       }
     }
 
@@ -330,7 +336,7 @@ ipcRenderer.on("return-open-dialog", (filePaths) => {
 
 // start job
 addJobButton.addEventListener("click", async function () {
-  let hdrBaseCommand = [
+  let pipe1 = [
     ffmpegToolPath,
     "-analyzeduration",
     "100M",
@@ -351,38 +357,37 @@ addJobButton.addEventListener("click", async function () {
     "-loglevel",
     "warning",
     "-stats",
-    "|",
   ];
+
+  let pipe2 = [];
 
   if (hdr10PlusCheckBox.checked) {
     // to do impliment command
   } else if (dVCheckBox.checked) {
-    // TODO actually detect/map FFMPEG
-    // TODO actually detect/map both HDR executables
-    hdrBaseCommand.push(doviToolPath);
+    pipe2.push(doviToolPath);
     dVRpuExtractMode.value.split(" ").forEach((element) => {
       if (element) {
-        hdrBaseCommand.push(element);
+        pipe2.push(element);
       }
     });
     dVHevcNaluCode.value.split(" ").forEach((element) => {
       if (element) {
-        hdrBaseCommand.push(element);
+        pipe2.push(element);
       }
     });
     if (dVCropBox.checked) {
-      hdrBaseCommand.push(dVCropBox.value);
+      pipe2.push(dVCropBox.value);
     }
-    hdrBaseCommand.push("extract-rpu");
-    hdrBaseCommand.push("-");
-    hdrBaseCommand.push("-o");
-    hdrBaseCommand.push(outputPath);
-
-    // console.log(hdrBaseCommand);
+    pipe2.push("extract-rpu");
+    pipe2.push("-");
+    pipe2.push("-o");
+    pipe2.push(outputPath);
 
     const addJob = await ipcRenderer.invoke("add-job", {
       fileName: inputFileName,
-      command: hdrBaseCommand,
+      pipe1: pipe1,
+      pipe2: pipe2,
+      frameCount: videoTrackFrameCount,
     });
     if (addJob) {
       const newJob = document.createElement("option");
@@ -443,8 +448,6 @@ deleteButton.addEventListener("click", function () {
 startJobButton.addEventListener("click", function () {
   // Check if any options are selected
   if (queueBox.options.length > 0) {
-    // startJobSVG.classList.add("button-out-disabled");
-    // console.log(startJobButton.nextSibling);
     ipcRenderer.send("start-queue");
   } else {
     ipcRenderer.send("show-message-prompt", [
@@ -475,10 +478,25 @@ ipcRenderer.on("job-complete-current", (job) => {
   }
 });
 
-// TODO maybe close panel or something when the jobs are completed
-ipcRenderer.on("job-complete", (arg) => {
-  // outputTextBox.value = arg.filePath.baseName;
-  // outputPath = arg.filePath.path;
+ipcRenderer.on("job-complete", () => {
+  queuePanelProgressBox.style.display = "none";
+  queuePanel.style.display = "none";
+});
+
+ipcRenderer.on("update-job-progress", (progress) => {
+  const computedStyle = window.getComputedStyle(queuePanelProgressBox);
+  if (computedStyle.getPropertyValue("display") !== "flex") {
+    queuePanelProgressBox.style.display = "flex";
+  }
+  jobProgress = progress;
+  queuePanelProgressBar.style.width = jobProgress.split(".")[0] + "%";
+  queuePanelProgressBarText.innerText = jobProgress + "%";
+});
+
+ipcRenderer.on("reset-job-progress", () => {
+  jobProgress = 0;
+  queuePanelProgressBar.style.width = 0;
+  queuePanelProgressBarText.innerText = "";
 });
 
 // about panel control

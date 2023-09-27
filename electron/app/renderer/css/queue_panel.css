@@ -28,7 +28,7 @@
 }
 
 #queue-listbox {
-  flex-grow: 1;
+  flex: 1;
   background-color: #3a3f48;
   border: none;
   color: #c0cbd3;
@@ -37,6 +37,38 @@
   border-left: solid 1px #707070;
   border-bottom: solid 1px #707070;
   border-right: solid 1px #707070;
+}
+
+#queue-progress-bar-box {
+  display: none;
+  width: 100%;
+  height: calc(10% - 2px);
+  max-height: calc(40px - 2px);
+  margin-top: 2px;
+  overflow: hidden;
+  border: 1px solid grey;
+  border-radius: 5px;
+  background-color: #35383f;
+  position: relative;
+}
+
+#queue-progress-bar {
+  width: 0;
+  height: 100%;
+  background-color: #2e7d32;
+  color: white;
+  transition: width 0.2s ease-in-out;
+}
+
+#queue-progress-text {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: lightgrey;
+  font-size: 0.9rem;
 }
 
 #queue-button-box {
