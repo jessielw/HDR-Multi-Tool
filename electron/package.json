@@ -28,6 +28,11 @@
     "url": "https://github.com/jlw4049/HDR-Multi-Tool-Gui/issues"
   },
   "homepage": "https://github.com/jlw4049/HDR-Multi-Tool-Gui#readme",
+  "electronmon": {
+    "patterns": [
+      "!logs/**/*"
+    ]
+  },
   "devDependencies": {
     "@electron-forge/cli": "^6.4.2",
     "@electron-forge/maker-deb": "^6.4.2",
