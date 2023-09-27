@@ -1,32 +1,53 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
-const curPlatform = require("os").platform();
+const { ipcMain } = require("electron");
 const { spawn } = require("child_process");
 
+// function convertFFmpegToPercent(line, durationInSeconds) {
+//   if (line.includes("time=-")) {
+//     return "0%";
+//   } else {
+//     const timeMatch = line.match(/time=(\d+):(\d+):(\d+)\.(\d+)/);
+//     if (timeMatch) {
+//       const hours = parseInt(timeMatch[1]);
+//       const minutes = parseInt(timeMatch[2]);
+//       const seconds = parseInt(timeMatch[3]);
+//       const totalMilliseconds =
+//         hours * 3600000 + minutes * 60000 + seconds * 1000;
+//       const progress = (totalMilliseconds / (durationInSeconds * 1000)) * 100;
+//       const percent = `${progress.toFixed(1)}%`;
+//       return percent;
+//     }
+//   }
+// }
+
+function convertFFmpegFrameCountToPercent(line, totalFrames) {
+  if (line.includes("frame=")) {
+    const frameMatch = line.match(/frame=(\d+)/);
+    if (frameMatch) {
+      const currentFrame = parseInt(frameMatch[1]);
+      const progress = (currentFrame / totalFrames) * 100;
+      const percent = progress.toFixed(1);
+      return percent;
+    }
+  }
+  return 0;
+}
+
 module.exports = (root) => {
-  // job control
   let currentJob = 0;
   const jobQueue = { uncompleted: [], failed: [], inProgress: [] };
 
-  function combinedPipes(data) {
-    console.log(data);
-  }
-
   ipcMain.handle("add-job", async (_, args) => {
-    // TODO handle linux
+    currentJob = currentJob++;
 
-    // update current job
-    currentJob++;
-
-    if (curPlatform === "win32") {
-      args.command.unshift("/c");
-      const modifiedJobCommand = {
-        currentJob: currentJob,
-        fileName: args.fileName,
-        osShell: "cmd",
-        command: args.command,
-      };
-      jobQueue.uncompleted.push(modifiedJobCommand);
-    }
+    const modifiedJobCommand = {
+      currentJob: currentJob,
+      fileName: args.fileName,
+      pipe1: args.pipe1,
+      pipe2: args.pipe2,
+      // duration: args.duration,
+      frameCount: args.frameCount,
+    };
+    jobQueue.uncompleted.push(modifiedJobCommand);
 
     return { currentJob: currentJob, jobName: args.fileName };
   });
@@ -56,8 +77,11 @@ module.exports = (root) => {
 
   async function processJobs() {
     while (jobQueue.uncompleted.length > 0) {
-      const job = jobQueue.uncompleted.shift(); // Get the next job
-      jobQueue.inProgress.push(job); // Move it to inProgress
+      // Get the next job
+      const job = jobQueue.uncompleted.shift();
+
+      // Move it to inProgress
+      jobQueue.inProgress.push(job);
 
       // Update current selected job in the UI
       await root.send("job-update-current", job);
@@ -72,29 +96,43 @@ module.exports = (root) => {
         await root.send("job-complete-current", job);
       }
     }
-
-    // TODO: Send a signal to the renderer to re-enable buttons or perform other actions
+    currentJob = 0;
+    root.send("job-complete");
+    // TODO check if there are jobs that failed and maybe don't send job complete to
+    // close the panel
   }
 
   async function processJob(job) {
-    // console.log(job);
-    const childProcess = spawn(job.osShell, job.command);
+    const ffmpegProcess = spawn(job.pipe1[0], job.pipe1.slice(1));
+    const hdrProcess = spawn(job.pipe2[0], job.pipe2.slice(1));
+    // const duration = job.duration;
+    const frameCount = job.frameCount;
+    let complete = false;
 
-    childProcess.stdout.setEncoding("utf-8");
-    childProcess.stdout.on("data", (data) => {
-      combinedPipes(data);
+    // pipe ffmpeg to hdr tool
+    ffmpegProcess.stdout.pipe(hdrProcess.stdin);
+
+    // process ffmpeg output
+    ffmpegProcess.stderr.on("data", (data) => {
+      // const progress = convertFFmpegToPercent(data.toString(), duration);
+      const progress = convertFFmpegFrameCountToPercent(
+        data.toString(),
+        frameCount
+      );
+
+      if (progress && progress < 99.9) {
+        root.webContents.send("update-job-progress", progress);
+      } else if (progress && parseInt(progress) == 100) {
+        complete = true;
+      }
     });
 
-    childProcess.stderr.setEncoding("utf-8");
-    childProcess.stderr.on("data", (data) => {
-      combinedPipes(data);
-    });
-
-    // Wait for the child process to complete
-    // TODO check if code was 0 or something else!
+    // Wait for the hdrProcess to complete
     await new Promise((resolve) => {
-      childProcess.on("close", (code) => {
-        console.log(`Child process exited with code ${code}`);
+      ffmpegProcess.on("close", (exitCode) => {
+        if (complete) {
+          root.webContents.send("reset-job-progress");
+        }
         resolve();
       });
     });
