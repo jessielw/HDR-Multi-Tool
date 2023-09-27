@@ -1,14 +1,15 @@
 const path = require("path");
-const fsPromises = require("fs").promises
-const MediaInfoFactory = require('mediainfo.js').default;
+const fsPromises = require("fs").promises;
+const MediaInfoFactory = require("mediainfo.js").default;
 
 const parseMediaInfo = async (fileInput) => {
   const file = path.normalize(fileInput);
-  console.log(file);
-  //const file = "C:/Users/jlw_4/OneDrive/Desktop/testing/Revolutionary Road 2008 Hybrid 2160p WEB-DL TrueHD 5.1 DoVi HDR10plus HEVC.mkv"; // Replace with your file path
-  const format = "object"; // Specify the desired format
-  const coverData = true; // Set to true if you want to extract cover data
-  const full = true; // Set to true for full information display
+  // Specify the desired format
+  const format = "object";
+  // Set to true if you want to extract cover data
+  const coverData = false;
+  // Set to true for full information display
+  const full = true;
 
   let fileHandle;
   let fileSize;
@@ -33,14 +34,11 @@ const parseMediaInfo = async (fileInput) => {
     }
 
     const result = await mediaInfo.analyzeData(() => fileSize, readChunk);
-    // console.log(result);
-    // return result;
     results = result;
   } finally {
     if (fileHandle) await fileHandle.close();
     if (mediaInfo) mediaInfo.close();
   }
-  // console.log(results);
   return results;
 };
 
