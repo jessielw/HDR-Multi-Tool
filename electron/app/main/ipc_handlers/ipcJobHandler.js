@@ -159,7 +159,7 @@ module.exports = (root) => {
 
     // Wait for the hdrProcess to complete
     await new Promise((resolve) => {
-      ffmpegProcess.on("close", (exitCode) => {
+      hdrProcess.on("close", (exitCode) => {
         if (complete) {
           root.webContents.send("reset-job-progress");
         }
