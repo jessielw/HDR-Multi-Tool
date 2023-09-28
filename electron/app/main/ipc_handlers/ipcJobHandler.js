@@ -1,5 +1,11 @@
 const { ipcMain } = require("electron");
 const { spawn } = require("child_process");
+const {
+  logProgress,
+  cleanupOldLogFiles,
+} = require("../../../app/main/logToFile");
+const path = require("path");
+// const getFileObject = require("../../../app/main/fileUtils").changeFileExtension;
 
 // function convertFFmpegToPercent(line, durationInSeconds) {
 //   if (line.includes("time=-")) {
@@ -108,6 +114,28 @@ module.exports = (root) => {
     // const duration = job.duration;
     const frameCount = job.frameCount;
     let complete = false;
+    const currentJobTimeStamp = new Date()
+      .toISOString()
+      .replace(/:/g, "-")
+      .replace(/\./g, "_")
+      .replace(/T/g, " ")
+      .replace(/Z/g, "_");
+
+    // log path
+    const logPath = path.join(
+      root.logDirectory,
+      `${currentJobTimeStamp}_${path.parse(job.fileName).name}.log`
+    );
+
+    // pipe hdr tool outputs to log
+    hdrProcess.stderr.on("data", (data) => {
+      const dataToString = data.toString();
+      logProgress(logPath, "HDR Tool", dataToString);
+    });
+    hdrProcess.stdout.on("data", (data) => {
+      const dataToString = data.toString();
+      logProgress(logPath, "HDR Tool", dataToString);
+    });
 
     // pipe ffmpeg to hdr tool
     ffmpegProcess.stdout.pipe(hdrProcess.stdin);
@@ -115,8 +143,10 @@ module.exports = (root) => {
     // process ffmpeg output
     ffmpegProcess.stderr.on("data", (data) => {
       // const progress = convertFFmpegToPercent(data.toString(), duration);
+      const dataToString = data.toString();
+      logProgress(logPath, "FFMPEG", dataToString);
       const progress = convertFFmpegFrameCountToPercent(
-        data.toString(),
+        dataToString,
         frameCount
       );
 
@@ -136,5 +166,8 @@ module.exports = (root) => {
         resolve();
       });
     });
+
+    // clean up log files
+    cleanupOldLogFiles(root.logDirectory);
   }
 };

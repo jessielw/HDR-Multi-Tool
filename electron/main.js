@@ -1,14 +1,16 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
+const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const { checkDependencies } = require("./app/main/detectFilePaths.js");
+const createLogDir = require("./app/main/createDirectories.js");
 const os = require("os");
 const electronStore = require("electron-store");
 
 // save configuration
-const store = new electronStore({
-  cwd: path.resolve("..", app.getAppPath(), "app_config"),
-  // encryptionKey: "asd;lkjqwerjasdoiuf"
-});
+// const store = new electronStore({
+// cwd: path.resolve("..", app.getAppPath(), "app_config"),
+//// encryptionKey: "asd;lkjqwerjasdoiuf"
+// });
+
 // store.set("testing", "testing123");
 // console.log(store);
 
@@ -16,6 +18,7 @@ const store = new electronStore({
 const curPlatform = os.platform();
 const devMode = true;
 
+// keep a global variable for root
 let root;
 
 async function createWindow() {
@@ -40,6 +43,11 @@ async function createWindow() {
       app.exit();
     }
   });
+
+  const getLogDirectory = await createLogDir(__dirname);
+
+  // add vars to root object as needed
+  root.logDirectory = getLogDirectory;
 
   // customize menu bar
   require("./app/main/customMenu.js")(root);
