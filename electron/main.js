@@ -63,6 +63,9 @@ async function createWindow() {
   require("./app/main/ipc_handlers/ipcFileHandlers.js");
   require("./app/main/ipc_handlers/ipcHandlers.js");
   require("./app/main/ipc_handlers/ipcJobHandler.js")(root);
+  if (!devMode) {
+    require("./app/main/ipc_handlers/ipcOverRideClose.js")(root);
+  }
 }
 
 app.whenReady().then(() => {

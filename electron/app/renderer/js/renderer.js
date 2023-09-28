@@ -521,6 +521,15 @@ ipcRenderer.on("reset-job-progress", () => {
   queuePanelProgressBarText.innerText = "";
 });
 
+ipcRenderer.on("safe-to-close-app", () => {
+  const computedStyle = window.getComputedStyle(queuePanelProgressBox);
+  let currentStatus = true;
+  if (computedStyle.getPropertyValue("display") === "flex") {
+    currentStatus = false;
+  }
+  ipcRenderer.send("respond:safe-to-close-app", currentStatus);
+});
+
 // about panel control
 ipcRenderer.on("open-about", () => {
   mainPanel.style.display = "none";
