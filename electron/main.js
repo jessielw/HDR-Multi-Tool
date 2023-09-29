@@ -16,7 +16,7 @@ const electronStore = require("electron-store");
 
 // get the operating system [darwin, win32, linux]
 const curPlatform = os.platform();
-const devMode = true;
+const devMode = false;
 
 // keep a global variable for root
 let root;
@@ -44,7 +44,8 @@ async function createWindow() {
     }
   });
 
-  const getLogDirectory = await createLogDir(__dirname);
+  const baseDir = path.resolve(".");
+  const getLogDirectory = await createLogDir(baseDir);
 
   // add vars to root object as needed
   root.logDirectory = getLogDirectory;
