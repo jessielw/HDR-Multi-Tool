@@ -31,6 +31,8 @@ async function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, "/app/preload/preload.js"),
     },
+    icon: path.join(__dirname, "/app/images/hdr.ico"),
+    backgroundColor: '#2c313a',
   });
 
   // Event listeners on the window
