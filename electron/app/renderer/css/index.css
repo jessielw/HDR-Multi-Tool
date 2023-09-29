@@ -89,14 +89,14 @@ body {
   height: 100%;
   min-height: 25px;
   max-height: 35px;
-  width: 90px;
+  width: 75px;
   display: flex;
   justify-content: center;
   align-items: center;
   color: lightgrey;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   background-color: #35383f;
-  border: 2px ridge grey;
+  border: 1px solid grey;
   transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
   border-radius: 6px;
   font-size: clamp(0.9rem, 1vw, 0.95rem);
@@ -157,12 +157,12 @@ body {
   border-radius: 5px;
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
-  margin-left: 1px;
+  margin-left: 2px;
 }
 
 .text-box-out {
   border-radius: 0;
-  margin-right: 1px;
+  margin-right: 2px;
 }
 
 #settings-area {

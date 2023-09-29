@@ -1,7 +1,7 @@
 #queue-panel {
   height: 100%;
-  width: calc(30% - 8px);
-  margin-left: 8px;
+  width: calc(30% - 3px);
+  margin-left: 3px;
   overflow: hidden;
   display: none;
 }
@@ -44,7 +44,7 @@
   width: 100%;
   height: calc(10% - 2px);
   max-height: calc(40px - 2px);
-  margin-top: 2px;
+  margin-top: 3px;
   overflow: hidden;
   border: 1px solid grey;
   border-radius: 5px;
