@@ -9,7 +9,6 @@ config.ini
 *.zip
 .vscode/
 app_config/
-forge.config.js
 test.js
 
 # Logs
