@@ -26,6 +26,7 @@ const queuePanel = document.getElementById("queue-panel");
 const queueBox = document.getElementById("queue-listbox");
 const deleteButton = document.getElementById("delete-job-button");
 const startJobButton = document.getElementById("start-job-button");
+const pauseJobButton = document.getElementById("pause-job-button");
 const queuePanelProgressBox = document.getElementById("queue-progress-bar-box");
 const queuePanelProgressBar = document.getElementById("queue-progress-bar");
 const queuePanelProgressBarText = document.getElementById(
@@ -426,6 +427,12 @@ addJobButton.addEventListener("click", async function () {
         queuePanel.style.display = "block";
       }
 
+      // start job if set to auto start
+      const autoStartJob = await ipcRenderer.invoke("auto-start-job");
+      if (autoStartJob) {
+        startJobButton.click();
+      }
+
       // reset main ui
       resetGui();
       addJobButton.classList.add("button-out-disabled");
@@ -468,15 +475,22 @@ deleteButton.addEventListener("click", function () {
 });
 
 startJobButton.addEventListener("click", function () {
-  // Check if any options are selected
   if (queueBox.options.length > 0) {
     ipcRenderer.send("start-queue");
+    startJobButton.style.display = "none";
+    pauseJobButton.style.display = "flex";
   } else {
     ipcRenderer.send("show-message-prompt", [
       "Information",
       "Queue has no jobs to process",
     ]);
   }
+});
+
+pauseJobButton.addEventListener("click", function () {
+  ipcRenderer.send("pause-queue");
+  startJobButton.style.display = "flex";
+  pauseJobButton.style.display = "none";
 });
 
 ipcRenderer.on("job-update-current", (job) => {
@@ -500,9 +514,15 @@ ipcRenderer.on("job-complete-current", (job) => {
   }
 });
 
+ipcRenderer.on("hide-progress-bar", () => {
+  queuePanelProgressBox.style.display = "none";
+});
+
 ipcRenderer.on("job-complete", () => {
   queuePanelProgressBox.style.display = "none";
   queuePanel.style.display = "none";
+  pauseJobButton.style.display = "none";
+  startJobButton.style.display = "flex";
 });
 
 ipcRenderer.on("update-job-progress", (progress) => {
@@ -510,8 +530,17 @@ ipcRenderer.on("update-job-progress", (progress) => {
   if (computedStyle.getPropertyValue("display") !== "flex") {
     queuePanelProgressBox.style.display = "flex";
   }
-  jobProgress = progress;
-  queuePanelProgressBar.style.width = jobProgress.split(".")[0] + "%";
+
+  jobProgress = String(progress);
+  let cssProgress;
+
+  if (jobProgress.includes(".")) {
+    cssProgress = jobProgress.split(".")[0] + "%";
+  } else {
+    cssProgress = jobProgress;
+  }
+
+  queuePanelProgressBar.style.width = cssProgress;
   queuePanelProgressBarText.innerText = jobProgress + "%";
 });
 

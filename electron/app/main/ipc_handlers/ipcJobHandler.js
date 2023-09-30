@@ -5,6 +5,7 @@ const {
   cleanupOldLogFiles,
 } = require("../../../app/main/logToFile");
 const path = require("path");
+const createConfigStore = require("../../../app/main/configUtils.js");
 // const getFileObject = require("../../../app/main/fileUtils").changeFileExtension;
 
 // function convertFFmpegToPercent(line, durationInSeconds) {
@@ -41,6 +42,8 @@ function convertFFmpegFrameCountToPercent(line, totalFrames) {
 module.exports = (root) => {
   let currentJob = 0;
   const jobQueue = { uncompleted: [], failed: [], inProgress: [] };
+  let pauseJob = false;
+  let queueInProgress = false;
 
   ipcMain.handle("add-job", async (_, args) => {
     currentJob = currentJob++;
@@ -59,7 +62,14 @@ module.exports = (root) => {
   });
 
   ipcMain.on("start-queue", async () => {
-    await processJobs();
+    pauseJob = false;
+
+    if (!queueInProgress) {
+      queueInProgress = true;
+      await processJobs();
+      queueInProgress = false;
+      root.webContents.send("hide-progress-bar");
+    }
   });
 
   ipcMain.on("remove-job-from-queue", (_, job) => {
@@ -81,8 +91,17 @@ module.exports = (root) => {
     }
   });
 
+  ipcMain.on("pause-queue", () => {
+    pauseJob = true;
+  });
+
   async function processJobs() {
     while (jobQueue.uncompleted.length > 0) {
+      // check to ensure queue isn't paused
+      if (pauseJob) {
+        return;
+      }
+
       // Get the next job
       const job = jobQueue.uncompleted.shift();
 
@@ -153,6 +172,7 @@ module.exports = (root) => {
       if (progress && progress < 99.9) {
         root.webContents.send("update-job-progress", progress);
       } else if (progress && parseInt(progress) == 100) {
+        root.webContents.send("update-job-progress", progress);
         complete = true;
       }
     });
@@ -171,3 +191,7 @@ module.exports = (root) => {
     cleanupOldLogFiles(root.logDirectory);
   }
 };
+
+ipcMain.handle("auto-start-job", async () => {
+  return createConfigStore().get("autoStart");
+});

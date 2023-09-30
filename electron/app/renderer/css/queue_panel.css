@@ -84,8 +84,14 @@
   fill: #2e7d32;
 }
 
+#pause-job-button {
+  display: none;
+  fill: #2e7d32;
+}
+
 #delete-job-button:hover,
-#start-job-button:hover {
+#start-job-button:hover,
+#pause-job-button:hover {
   fill: #3498db;
   transition-duration: 0.1s;
 }
