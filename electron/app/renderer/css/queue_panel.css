@@ -1,0 +1,97 @@
+#queue-panel {
+  height: 100%;
+  width: calc(30% - 3px);
+  margin-left: 3px;
+  overflow: hidden;
+  display: none;
+}
+
+#queue-header {
+  height: 10%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: lightgrey;
+  font-size: 0.85rem;
+  border: solid 1px #707070;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  background-color: #282c34;
+}
+
+#queue-body {
+  height: 90%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#queue-listbox {
+  flex: 1;
+  background-color: #3a3f48;
+  border: none;
+  color: #c0cbd3;
+  overflow-x: auto;
+  overflow-y: auto;
+  border-left: solid 1px #707070;
+  border-bottom: solid 1px #707070;
+  border-right: solid 1px #707070;
+}
+
+#queue-progress-bar-box {
+  display: none;
+  width: 100%;
+  height: calc(10% - 2px);
+  max-height: calc(40px - 2px);
+  margin-top: 3px;
+  overflow: hidden;
+  border: 1px solid grey;
+  border-radius: 5px;
+  background-color: #35383f;
+  position: relative;
+}
+
+#queue-progress-bar {
+  width: 0;
+  height: 100%;
+  background-color: #2e7d32;
+  color: white;
+  transition: width 0.2s ease-in-out;
+}
+
+#queue-progress-text {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: lightgrey;
+  font-size: 0.9rem;
+}
+
+#queue-button-box {
+  height: 10%;
+  justify-content: space-between;
+}
+
+#delete-job-button {
+  fill: #e1401d;
+}
+
+#start-job-button {
+  fill: #2e7d32;
+}
+
+#pause-job-button {
+  display: none;
+  fill: #2e7d32;
+}
+
+#delete-job-button:hover,
+#start-job-button:hover,
+#pause-job-button:hover {
+  fill: #3498db;
+  transition-duration: 0.1s;
+}
