@@ -4,7 +4,7 @@
   "description": "A graphical user interface for parsing HDR10+ and Dolby Vision",
   "main": "main.js",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "electronmon ./main.js",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },

@@ -6,7 +6,6 @@ const os = require("os");
 
 // get the operating system [darwin, win32, linux]
 const curPlatform = os.platform();
-const devMode = false;
 
 // keep a global variable for root
 let root;
@@ -48,14 +47,14 @@ async function createWindow() {
   root.loadFile(path.join(__dirname, "/app/renderer/index.html"));
 
   // Open the DevTools.
-  if (devMode) {
+  if (!app.isPackaged) {
     root.webContents.openDevTools();
   }
 
   require("./app/main/ipc_handlers/ipcFileHandlers.js");
   require("./app/main/ipc_handlers/ipcHandlers.js");
   require("./app/main/ipc_handlers/ipcJobHandler.js")(root);
-  if (!devMode) {
+  if (app.isPackaged) {
     require("./app/main/ipc_handlers/ipcOverRideClose.js")(root);
   }
 }
