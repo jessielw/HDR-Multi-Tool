@@ -1,20 +1,18 @@
 # HDR10Plus-Tool-Gui
 
-![image](https://github.com/jlw4049/HDR-Multi-Tool-Gui/assets/48299282/128116da-277e-406b-832f-ca4f44e1ad65)
 ![image](https://github.com/jlw4049/HDR-Multi-Tool-Gui/assets/48299282/6f8920d0-64c2-408c-bc1f-0decb6783a45)
 
+A modern GUI to parse HDR10+ and Dolby Vision dynamic metadata for use with video encoding.
 
-![](hdr-multi-tool-gui.v1.3.png)
+Program supports MKV, TS, MP4, and HEVC as inputs right now. Please open an issue if there is any inputs that are
+not accepted that should be.
 
-A basic GUI to parse MKV, TS, MP4, and HEVC HDR10/10+ and Dolby Vision dynamic metadata for use with video encoding
+If you open a file that has both HDR10+ and Dolby Vision you will see dual option panels. Choose which you would
+like to extract and configure the settings. Everything else is handled for you.
 
-Program only supports the above formats for now, I will add support for more if I come across any.
+At the moment the only configurable options there is under options is to automatically start the job queue upon
+adding a job.
 
-Feel free to put an issue on the tracker here if the program should but doesn't support an input extension type
+#### Note
 
-In the menu at the top, you can select 'Automatic' or 'Debug':
-
-'Progress Bars' spawns new windows with progress bars and a read out
-
-'CMD Shell (Debug)' will spawn a CMD shell and leave it open in order to read errors in the event you have one
-
+As of **v2.0** the tkinter version of the app has been dropped. I have no plans to update/maintain that version of the app. However, I will leave it on the repository in the "tkinter" folder.
