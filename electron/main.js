@@ -3,16 +3,6 @@ const path = require("path");
 const { checkDependencies } = require("./app/main/detectFilePaths.js");
 const createLogDir = require("./app/main/createDirectories.js");
 const os = require("os");
-const electronStore = require("electron-store");
-
-// save configuration
-// const store = new electronStore({
-// cwd: path.resolve("..", app.getAppPath(), "app_config"),
-//// encryptionKey: "asd;lkjqwerjasdoiuf"
-// });
-
-// store.set("testing", "testing123");
-// console.log(store);
 
 // get the operating system [darwin, win32, linux]
 const curPlatform = os.platform();
@@ -32,7 +22,7 @@ async function createWindow() {
       preload: path.join(__dirname, "/app/preload/preload.js"),
     },
     icon: path.join(__dirname, "/app/images/hdr.ico"),
-    backgroundColor: '#2c313a',
+    backgroundColor: "#2c313a",
   });
 
   // Event listeners on the window
@@ -46,8 +36,7 @@ async function createWindow() {
     }
   });
 
-  const baseDir = path.resolve(".");
-  const getLogDirectory = await createLogDir(baseDir);
+  const getLogDirectory = await createLogDir();
 
   // add vars to root object as needed
   root.logDirectory = getLogDirectory;
