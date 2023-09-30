@@ -1,9 +1,10 @@
 const path = require("path");
 const fs = require("fs").promises;
 const { dialog } = require("electron");
+const baseDirectory = require("../../app/main/baseDirectory");
 
-async function createLogDir(baseDir) {
-  const logDirectory = path.join(baseDir, "logs");
+async function createLogDir() {
+  const logDirectory = path.join(baseDirectory, "logs");
 
   try {
     await fs.mkdir(logDirectory, { recursive: true });
