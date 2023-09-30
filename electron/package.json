@@ -30,7 +30,8 @@
   "homepage": "https://github.com/jlw4049/HDR-Multi-Tool-Gui#readme",
   "electronmon": {
     "patterns": [
-      "!logs/**/*"
+      "!logs/**/*",
+      "!app_config/**/*"
     ]
   },
   "devDependencies": {
