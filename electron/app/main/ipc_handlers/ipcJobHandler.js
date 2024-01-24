@@ -6,6 +6,7 @@ const {
 } = require("../../../app/main/logToFile");
 const path = require("path");
 const createConfigStore = require("../../../app/main/configUtils.js");
+const fs = require("fs");
 // const getFileObject = require("../../../app/main/fileUtils").changeFileExtension;
 
 // function convertFFmpegToPercent(line, durationInSeconds) {
@@ -39,6 +40,13 @@ function convertFFmpegFrameCountToPercent(line, totalFrames) {
   return 0;
 }
 
+function checkValidOutput(filePath, root) {
+  const getSize = fs.statSync(filePath).size;
+  if (getSize == 0) {
+    root.webContents.send("invalid-output", filePath);
+  }
+}
+
 module.exports = (root) => {
   let currentJob = 0;
   const jobQueue = { uncompleted: [], failed: [], inProgress: [] };
@@ -51,6 +59,7 @@ module.exports = (root) => {
     const modifiedJobCommand = {
       currentJob: currentJob,
       fileName: args.fileName,
+      outputPath: args.outputPath,
       pipe1: args.pipe1,
       pipe2: args.pipe2,
       // duration: args.duration,
@@ -181,6 +190,7 @@ module.exports = (root) => {
     await new Promise((resolve) => {
       hdrProcess.on("close", (exitCode) => {
         if (complete) {
+          checkValidOutput(job.outputPath, root);
           root.webContents.send("reset-job-progress");
         }
         resolve();

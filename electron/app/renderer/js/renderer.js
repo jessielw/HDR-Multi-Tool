@@ -355,7 +355,7 @@ addJobButton.addEventListener("click", async function () {
     "0:v:0",
     "-c:v:0",
     "copy",
-    "-vbsf",
+    "-bsf:v",
     "hevc_mp4toannexb",
     "-f",
     "hevc",
@@ -408,6 +408,7 @@ addJobButton.addEventListener("click", async function () {
   if (hdr10PlusCheckBox.checked || dVCheckBox.checked) {
     const addJob = await ipcRenderer.invoke("add-job", {
       fileName: inputFileName,
+      outputPath: outputPath,
       pipe1: pipe1,
       pipe2: pipe2,
       frameCount: videoTrackFrameCount,
@@ -523,6 +524,13 @@ ipcRenderer.on("job-complete", () => {
   queuePanel.style.display = "none";
   pauseJobButton.style.display = "none";
   startJobButton.style.display = "flex";
+});
+
+ipcRenderer.on("invalid-output", (filePath) => {
+  ipcRenderer.send("show-message-prompt", [
+    "Error",
+    `There was an error parsing metadata, input likely has invalid HDR metadata.\n\nInvalid output:\n${filePath}`,
+  ]);
 });
 
 ipcRenderer.on("update-job-progress", (progress) => {
