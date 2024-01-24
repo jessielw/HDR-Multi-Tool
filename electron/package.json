@@ -1,12 +1,13 @@
 {
   "name": "hdr-multi-tool",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A graphical user interface for parsing HDR10+ and Dolby Vision",
   "main": "main.js",
   "scripts": {
     "start": "electronmon ./main.js",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "make-portable": "electron-forge make --platform=win32 --arch=x64"
   },
   "repository": {
     "type": "git",
