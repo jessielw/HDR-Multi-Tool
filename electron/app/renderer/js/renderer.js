@@ -13,7 +13,14 @@ const hdr10PlusSkipReOrder = document.getElementById(
 );
 const dVContent = document.getElementById("dv-content");
 const dVCheckBox = document.getElementById("dv-check-box");
-const dVCropBox = document.getElementById("dv-crop-box");
+const dvCropBox = document.getElementById("dv-crop-box");
+const dVCropControlBox = document.getElementById("dv-crop-control-box");
+const dvCropTop = document.getElementById("dv-top-crop");
+const dvCropBottom = document.getElementById("dv-bottom-crop");
+const dvCropLeft = document.getElementById("dv-left-crop");
+const dvCropRight = document.getElementById("dv-right-crop");
+const cropSelections = [dvCropTop, dvCropBottom, dvCropLeft, dvCropRight];
+const fixNegativeOffsets = document.getElementById("fix-negative-offsets");
 const dVRpuExtractMode = document.getElementById("rpu-extract-mode");
 const dVHevcNaluCode = document.getElementById("hevc-nalu");
 const outputFileBtn = document.getElementById("save-file");
@@ -84,6 +91,7 @@ function resetGui() {
   outputPath = undefined;
   inputTextBox.value = "";
   outputTextBox.value = "";
+  dVCropControlBox.classList.remove("dv-cropped-box-alt");
 
   // fully default ui
   infoArea.innerText = "Open a Dolby Vision or HDR10+ compatible file";
@@ -184,6 +192,8 @@ async function acceptInputFile(filePath) {
       hdr10PlusCheckBox.checked = false;
       hdr10PlusContent.style.display = "none";
       dVContent.style.display = "flex";
+      dVCropControlBox.classList.add("dv-cropped-box-alt");
+      console.log(dVCropControlBox.classList);
       dVCheckBox.checked = true;
       outputExt = ".bin";
     } else if (hdr10Plus) {
@@ -246,6 +256,36 @@ dVCheckBox.addEventListener("change", function () {
   }
   outputExt = ".bin";
   enableDisableAddJob();
+});
+
+dvCropBox.addEventListener("change", function () {
+  if (dvCropBox.checked) {
+    enableCropInputs(false);
+  } else {
+    enableCropInputs(true);
+  }
+});
+
+// enables/disables crop spin box's
+function enableCropInputs(disabledStatus) {
+  cropSelections.forEach((cropInput) => {
+    cropInput.disabled = disabledStatus;
+    if (disabledStatus) {
+      cropInput.value = 0;
+      fixNegativeOffsets.disabled = true;
+    } else {
+      fixNegativeOffsets.disabled = false;
+    }
+  });
+}
+
+// ensure that the crop values are always at least 0
+cropSelections.forEach((cropInput) => {
+  cropInput.addEventListener("change", function () {
+    if (!cropInput.value) {
+      cropInput.value = 0;
+    }
+  });
 });
 
 async function enableDisableAddJob() {
@@ -397,8 +437,8 @@ addJobButton.addEventListener("click", async function () {
         pipe2.push(element);
       }
     });
-    if (dVCropBox.checked) {
-      pipe2.push(dVCropBox.value);
+    if (dvCropBox.checked) {
+      pipe2.push(dvCropBox.value);
     }
     ["extract-rpu", "-", "-o", outputPath].forEach((element) => {
       pipe2.push(element);

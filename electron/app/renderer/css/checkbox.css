@@ -22,3 +22,8 @@
 .default-checkbox:checked {
   background-color: #345bdb;
 }
+
+.default-checkbox:disabled {
+  background-color: darkgrey;
+  opacity: 0.7;
+}
