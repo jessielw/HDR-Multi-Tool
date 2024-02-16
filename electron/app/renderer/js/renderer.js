@@ -202,6 +202,7 @@ async function acceptInputFile(filePath) {
     } else if (hdr10Plus) {
       dVCheckBox.checked = false;
       dVContent.style.display = "none";
+      hdr10PlusContent.style.display = "flex";
       hdr10PlusCheckBox.checked = true;
       outputExt = ".json";
     }
