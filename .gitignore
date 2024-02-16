@@ -3,6 +3,7 @@ build/
 dist/
 __pycache__/
 Apps/
+apps/
 HDR10PlusParser.spec
 config.ini
 *.exe
