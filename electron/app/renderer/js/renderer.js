@@ -54,7 +54,7 @@ const defaultInfoColor = infoArea.style.color;
 let doviToolPath;
 let hdrToolPath;
 let ffmpegToolPath;
-ipcRenderer
+window.api.ipcRenderer
   .invoke("get-tool-paths")
   .then((toolPaths) => {
     doviToolPath = toolPaths.doviToolPath;
@@ -114,7 +114,7 @@ async function acceptInputFile(filePath) {
   resetGui();
 
   try {
-    const inputFileObject = await ipcRenderer.invoke(
+    const inputFileObject = await window.api.ipcRenderer.invoke(
       "get-path-object",
       filePath
     );
@@ -127,7 +127,7 @@ async function acceptInputFile(filePath) {
       return;
     }
 
-    const mediaInfoObjectParsed = await ipcRenderer.invoke(
+    const mediaInfoObjectParsed = await window.api.ipcRenderer.invoke(
       "open-file",
       filePath
     );
@@ -219,7 +219,7 @@ async function acceptInputFile(filePath) {
 // output button
 outputFileBtn.addEventListener("click", function () {
   if (outputFileBtn.classList.contains("file-buttons-hover")) {
-    ipcRenderer.send("show-save-dialog", {
+    window.api.ipcRenderer.send("show-save-dialog", {
       defaultPath: inputPath,
       outputExtension: [outputExt.replace(".", "")],
       allFiles: false,
@@ -227,7 +227,7 @@ outputFileBtn.addEventListener("click", function () {
   }
 });
 
-ipcRenderer.on("save-dialog-success", (arg) => {
+window.api.ipcRenderer.on("save-dialog-success", (arg) => {
   outputTextBox.value = arg.filePath.baseName;
   outputPath = arg.filePath.path;
 });
@@ -281,9 +281,11 @@ function enableCropInputs(disabledStatus) {
       fixNegativeOffsets.checked = true;
     }
   });
-  ipcRenderer.invoke("get-negative-offset-bool").then((negativeOffsetBool) => {
-    fixNegativeOffsets.checked = negativeOffsetBool;
-  });
+  window.api.ipcRenderer
+    .invoke("get-negative-offset-bool")
+    .then((negativeOffsetBool) => {
+      fixNegativeOffsets.checked = negativeOffsetBool;
+    });
 }
 
 // ensure that the crop values are always at least 0
@@ -297,7 +299,10 @@ cropSelections.forEach((cropInput) => {
 
 // update fix negative offset
 fixNegativeOffsets.addEventListener("change", function () {
-  ipcRenderer.send("update-negative-offset-bool", fixNegativeOffsets.checked);
+  window.api.ipcRenderer.send(
+    "update-negative-offset-bool",
+    fixNegativeOffsets.checked
+  );
 });
 
 async function enableDisableAddJob() {
@@ -307,7 +312,7 @@ async function enableDisableAddJob() {
   } else {
     if (outputExt) {
       try {
-        const newOutput = await ipcRenderer.invoke(
+        const newOutput = await window.api.ipcRenderer.invoke(
           "change-extension",
           inputPath,
           outputExt
@@ -364,10 +369,10 @@ function checkHdrTypes(hdrString) {
 }
 
 openFileBtn.addEventListener("click", function () {
-  ipcRenderer.send("show-open-dialog");
+  window.api.ipcRenderer.send("show-open-dialog");
 });
 
-ipcRenderer.on("return-open-dialog", (filePaths) => {
+window.api.ipcRenderer.on("return-open-dialog", (filePaths) => {
   if (filePaths && filePaths.length > 0) {
     const selectedFilePath = filePaths[0];
     acceptInputFile(selectedFilePath);
@@ -477,7 +482,7 @@ addJobButton.addEventListener("click", async function () {
   }
 
   if (hdr10PlusCheckBox.checked || dVCheckBox.checked) {
-    const addJob = await ipcRenderer.invoke("add-job", {
+    const addJob = await window.api.ipcRenderer.invoke("add-job", {
       fileName: inputFileName,
       outputPath: outputPath,
       pipe1: pipe1,
@@ -501,7 +506,9 @@ addJobButton.addEventListener("click", async function () {
       }
 
       // start job if set to auto start
-      const autoStartJob = await ipcRenderer.invoke("auto-start-job");
+      const autoStartJob = await window.api.ipcRenderer.invoke(
+        "auto-start-job"
+      );
       if (autoStartJob) {
         startJobButton.click();
       }
@@ -535,12 +542,12 @@ deleteButton.addEventListener("click", function () {
     // Remove each selected option
     selectedOptions.forEach((option) => {
       if (!option.disabled) {
-        ipcRenderer.send("remove-job-from-queue", option.id);
+        window.api.ipcRenderer.send("remove-job-from-queue", option.id);
         queueBox.remove(option.index);
       }
     });
   } else {
-    ipcRenderer.send("show-message-prompt", [
+    window.api.ipcRenderer.send("show-message-prompt", [
       "Information",
       "You must select a job first",
     ]);
@@ -549,11 +556,11 @@ deleteButton.addEventListener("click", function () {
 
 startJobButton.addEventListener("click", function () {
   if (queueBox.options.length > 0) {
-    ipcRenderer.send("start-queue");
+    window.api.ipcRenderer.send("start-queue");
     startJobButton.style.display = "none";
     pauseJobButton.style.display = "flex";
   } else {
-    ipcRenderer.send("show-message-prompt", [
+    window.api.ipcRenderer.send("show-message-prompt", [
       "Information",
       "Queue has no jobs to process",
     ]);
@@ -561,12 +568,12 @@ startJobButton.addEventListener("click", function () {
 });
 
 pauseJobButton.addEventListener("click", function () {
-  ipcRenderer.send("pause-queue");
+  window.api.ipcRenderer.send("pause-queue");
   startJobButton.style.display = "flex";
   pauseJobButton.style.display = "none";
 });
 
-ipcRenderer.on("job-update-current", (job) => {
+window.api.ipcRenderer.on("job-update-current", (job) => {
   const selectedOption = queueBox.querySelector(
     `option[id="job-id-${job.currentJob}"]`
   );
@@ -577,7 +584,7 @@ ipcRenderer.on("job-update-current", (job) => {
   }
 });
 
-ipcRenderer.on("job-complete-current", (job) => {
+window.api.ipcRenderer.on("job-complete-current", (job) => {
   const selectedOption = queueBox.querySelector(
     `option[id="job-id-${job.currentJob}"]`
   );
@@ -587,25 +594,25 @@ ipcRenderer.on("job-complete-current", (job) => {
   }
 });
 
-ipcRenderer.on("hide-progress-bar", () => {
+window.api.ipcRenderer.on("hide-progress-bar", () => {
   queuePanelProgressBox.style.display = "none";
 });
 
-ipcRenderer.on("job-complete", () => {
+window.api.ipcRenderer.on("job-complete", () => {
   queuePanelProgressBox.style.display = "none";
   queuePanel.style.display = "none";
   pauseJobButton.style.display = "none";
   startJobButton.style.display = "flex";
 });
 
-ipcRenderer.on("invalid-output", (filePath) => {
-  ipcRenderer.send("show-message-prompt", [
+window.api.ipcRenderer.on("invalid-output", (filePath) => {
+  window.api.ipcRenderer.send("show-message-prompt", [
     "Error",
     `There was an error parsing metadata, input likely has invalid HDR metadata.\n\nInvalid output:\n${filePath}`,
   ]);
 });
 
-ipcRenderer.on("update-job-progress", (progress) => {
+window.api.ipcRenderer.on("update-job-progress", (progress) => {
   const computedStyle = window.getComputedStyle(queuePanelProgressBox);
   if (computedStyle.getPropertyValue("display") !== "flex") {
     queuePanelProgressBox.style.display = "flex";
@@ -624,23 +631,23 @@ ipcRenderer.on("update-job-progress", (progress) => {
   queuePanelProgressBarText.innerText = jobProgress + "%";
 });
 
-ipcRenderer.on("reset-job-progress", () => {
+window.api.ipcRenderer.on("reset-job-progress", () => {
   jobProgress = 0;
   queuePanelProgressBar.style.width = 0;
   queuePanelProgressBarText.innerText = "";
 });
 
-ipcRenderer.on("safe-to-close-app", () => {
+window.api.ipcRenderer.on("safe-to-close-app", () => {
   const computedStyle = window.getComputedStyle(queuePanelProgressBox);
   let currentStatus = true;
   if (computedStyle.getPropertyValue("display") === "flex") {
     currentStatus = false;
   }
-  ipcRenderer.send("respond:safe-to-close-app", currentStatus);
+  window.api.ipcRenderer.send("respond:safe-to-close-app", currentStatus);
 });
 
 // about panel control
-ipcRenderer.on("open-about", () => {
+window.api.ipcRenderer.on("open-about", () => {
   mainPanel.style.display = "none";
   aboutPanel.style.display = "flex";
 });
