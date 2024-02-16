@@ -14,7 +14,7 @@ async function createWindow() {
   // Create the browser window.
   root = new BrowserWindow({
     width: 700,
-    height: 380,
+    height: 400,
     webPreferences: {
       sandbox: true,
       contextIsolation: true,
