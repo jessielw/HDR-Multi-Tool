@@ -4,32 +4,15 @@ const {
   logProgress,
   cleanupOldLogFiles,
 } = require("../../../app/main/logToFile");
+const { processDvJson } = require("../dvCropUtils.js");
+const { showMessagePrompt } = require("../ipc_handlers/ipcHandlers.js");
 const path = require("path");
 const createConfigStore = require("../../../app/main/configUtils.js");
 const fs = require("fs");
-// const getFileObject = require("../../../app/main/fileUtils").changeFileExtension;
-
-// function convertFFmpegToPercent(line, durationInSeconds) {
-//   if (line.includes("time=-")) {
-//     return "0%";
-//   } else {
-//     const timeMatch = line.match(/time=(\d+):(\d+):(\d+)\.(\d+)/);
-//     if (timeMatch) {
-//       const hours = parseInt(timeMatch[1]);
-//       const minutes = parseInt(timeMatch[2]);
-//       const seconds = parseInt(timeMatch[3]);
-//       const totalMilliseconds =
-//         hours * 3600000 + minutes * 60000 + seconds * 1000;
-//       const progress = (totalMilliseconds / (durationInSeconds * 1000)) * 100;
-//       const percent = `${progress.toFixed(1)}%`;
-//       return percent;
-//     }
-//   }
-// }
 
 function convertFFmpegFrameCountToPercent(line, totalFrames) {
   if (line.includes("frame=")) {
-    const frameMatch = line.match(/frame=(\d+)/);
+    const frameMatch = line.match(/frame\s*=\s*(\d+)/);
     if (frameMatch) {
       const currentFrame = parseInt(frameMatch[1]);
       const progress = (currentFrame / totalFrames) * 100;
@@ -38,6 +21,126 @@ function convertFFmpegFrameCountToPercent(line, totalFrames) {
     }
   }
   return 0;
+}
+
+function cleanStdoutOutput(line) {
+  const parts = line.split(/\s+/);
+  const cleanedParts = parts.filter((part) => part.trim() !== "");
+  const cleanedLine = cleanedParts.join(" ");
+  return cleanedLine;
+}
+
+function processDvCrop(logPath, dvCropPipe, root) {
+  try {
+    const dvCropProcess = spawn(
+      dvCropPipe.command[0],
+      dvCropPipe.command.slice(1)
+    );
+
+    dvCropProcess.stdout.on("data", (data) => {
+      const dataToString = cleanStdoutOutput(data.toString());
+      logProgress(logPath, "dovi_tool Crop", dataToString);
+    });
+    dvCropProcess.stderr.on("data", (data) => {
+      const dataToString = cleanStdoutOutput(data.toString());
+      logProgress(logPath, "dovi_tool Crop", dataToString);
+    });
+
+    dvCropProcess.on("error", (error) => {
+      logProgress(
+        logPath,
+        "dovi_tool Edit",
+        `Error spawning dvCropProcess: ${error.message}`
+      );
+    });
+
+    dvCropProcess.on("close", (code) => {
+      if (code !== 0) {
+        logProgress(
+          logPath,
+          "dovi_tool Edit",
+          `dvCropProcess exited with code ${code}, command used ${dvCropPipe.command.join(
+            " "
+          )}`
+        );
+        showMessagePrompt([
+          "Error",
+          `Error running dvCropProcess, please see logs for details`,
+        ]);
+      } else {
+        try {
+          let updatedDv = processDvJson(
+            dvCropPipe.jsonOut,
+            parseInt(dvCropPipe.mode),
+            dvCropPipe.crops.top,
+            dvCropPipe.crops.bottom,
+            dvCropPipe.crops.left,
+            dvCropPipe.crops.right,
+            dvCropPipe.crops.fixNegativeOffsets,
+            (logMessage) => logProgress(logPath, "dovi_tool Edit", logMessage)
+          );
+
+          let modifyBinCommand = [
+            "editor",
+            "-i",
+            dvCropPipe.outputPath,
+            "-j",
+            updatedDv,
+            "-o",
+            dvCropPipe.outputPath,
+          ];
+
+          const dvEditProcess = spawn(dvCropPipe.command[0], modifyBinCommand);
+
+          dvEditProcess.stdout.on("data", (data) => {
+            const dataToString = cleanStdoutOutput(data.toString());
+            logProgress(logPath, "dovi_tool Edit", dataToString);
+          });
+          dvEditProcess.stderr.on("data", (data) => {
+            const dataToString = cleanStdoutOutput(data.toString());
+            logProgress(logPath, "dovi_tool Edit", dataToString);
+          });
+
+          dvEditProcess.on("error", (error) => {
+            logProgress(
+              logPath,
+              "dovi_tool Edit",
+              `Error spawning dvEditProcess: ${error.message}`
+            );
+          });
+          dvEditProcess.on("close", (code) => {
+            if (code !== 0) {
+              logProgress(
+                logPath,
+                "dovi_tool Edit",
+                `dvEditProcess exited with code ${code}, command used ${modifyBinCommand.join(
+                  " "
+                )}`
+              );
+              showMessagePrompt([
+                "Error",
+                `Error running dvEditProcess, please see logs for details`,
+              ]);
+            }
+          });
+        } catch (error) {
+          logProgress(logPath, "dovi_tool Edit", error);
+          showMessagePrompt([
+            "Error",
+            `Error running dvCropProcess, please see logs for details`,
+          ]);
+          return;
+        }
+      }
+    });
+  } catch (error) {
+    // Handle any synchronous errors
+    logProgress(
+      logPath,
+      "dovi_tool Edit",
+      `Error in processDvCrop: ${error.message}`
+    );
+  }
 }
 
 function checkValidOutput(filePath, root) {
@@ -62,7 +165,7 @@ module.exports = (root) => {
       outputPath: args.outputPath,
       pipe1: args.pipe1,
       pipe2: args.pipe2,
-      // duration: args.duration,
+      dvCropPipe: args.dvCropPipe,
       frameCount: args.frameCount,
     };
     jobQueue.uncompleted.push(modifiedJobCommand);
@@ -95,8 +198,8 @@ module.exports = (root) => {
       jobQueue.uncompleted.splice(indexToRemove, 1);
     } else {
       // handle the case where the item with the specified currentJob value was not found
-      // TODO decide if we want to do anything further here
-      console.log(`Item with currentJob ${currentJobToRemove} not found.`);
+      // TODO decide if we want to do anything further here, maybe add to log output?
+      // console.log(`Item with currentJob ${currentJobToRemove} not found.`);
     }
   });
 
@@ -138,8 +241,8 @@ module.exports = (root) => {
 
   async function processJob(job) {
     const ffmpegProcess = spawn(job.pipe1[0], job.pipe1.slice(1));
-    const hdrProcess = spawn(job.pipe2[0], job.pipe2.slice(1));
-    // const duration = job.duration;
+    const hdrProcess = spawn(job.pipe2.command[0], job.pipe2.command.slice(1));
+    const dvCropPipe = job.dvCropPipe;
     const frameCount = job.frameCount;
     let complete = false;
     const currentJobTimeStamp = new Date()
@@ -155,29 +258,30 @@ module.exports = (root) => {
       `${currentJobTimeStamp}_${path.parse(job.fileName).name}.log`
     );
 
-    // pipe hdr tool outputs to log
+    // pipe dovi_tool outputs to log
     hdrProcess.stderr.on("data", (data) => {
-      const dataToString = data.toString();
-      logProgress(logPath, "HDR Tool", dataToString);
+      const dataToString = cleanStdoutOutput(data.toString());
+      logProgress(logPath, "dovi_tool", dataToString);
     });
     hdrProcess.stdout.on("data", (data) => {
-      const dataToString = data.toString();
-      logProgress(logPath, "HDR Tool", dataToString);
+      const dataToString = cleanStdoutOutput(data.toString());
+      if (dataToString.includes("Done.")) {
+        complete = true;
+      }
+      logProgress(logPath, "dovi_tool", dataToString);
     });
 
-    // pipe ffmpeg to hdr tool
+    // pipe ffmpeg to dovi_tool
     ffmpegProcess.stdout.pipe(hdrProcess.stdin);
 
     // process ffmpeg output
     ffmpegProcess.stderr.on("data", (data) => {
-      // const progress = convertFFmpegToPercent(data.toString(), duration);
-      const dataToString = data.toString();
+      const dataToString = cleanStdoutOutput(data.toString());
       logProgress(logPath, "FFMPEG", dataToString);
       const progress = convertFFmpegFrameCountToPercent(
         dataToString,
         frameCount
       );
-
       if (progress && progress < 99.9) {
         root.webContents.send("update-job-progress", progress);
       } else if (progress && parseInt(progress) == 100) {
@@ -189,9 +293,24 @@ module.exports = (root) => {
     // Wait for the hdrProcess to complete
     await new Promise((resolve) => {
       hdrProcess.on("close", (exitCode) => {
-        if (complete) {
+        if (complete && exitCode == 0) {
           checkValidOutput(job.outputPath, root);
+          if (dvCropPipe) {
+            processDvCrop(logPath, dvCropPipe, root);
+          }
           root.webContents.send("reset-job-progress");
+        } else {
+          logProgress(
+            logPath,
+            "dovi_tool",
+            `Error executing hdrProcess, command used ${job.pipe2.command.join(
+              " "
+            )}`
+          );
+          showMessagePrompt([
+            "Error",
+            `Error running hdrProcess, please see logs for details`,
+          ]);
         }
         resolve();
       });
