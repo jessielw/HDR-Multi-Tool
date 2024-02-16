@@ -71,3 +71,25 @@ ipcMain.on("show-message-prompt", (event, args) => {
       event.reply("message-box-response", response);
     });
 });
+
+function showMessagePrompt(args, event) {
+  dialog
+    .showMessageBox({
+      title: args[0],
+      message: args[1],
+    })
+    .then((response) => {
+      if (event) {
+        event.reply("message-box-response", response);
+      }
+    })
+    .catch((error) => {
+      console.error("Error showing message box:", error);
+    });
+}
+
+ipcMain.on("show-message-prompt", (event, args) => {
+  showMessagePrompt(args, event);
+});
+
+module.exports = { showMessagePrompt };
