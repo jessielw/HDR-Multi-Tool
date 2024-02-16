@@ -8,7 +8,8 @@
     "start_electron": "electron .",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "make-portable": "electron-forge make --platform=win32 --arch=x64"
+    "make-portable": "electron-forge make --platform=win32 --arch=x64",
+    "make-portable-linux": "electron-forge make --platform=linux --arch=x64"
   },
   "repository": {
     "type": "git",
