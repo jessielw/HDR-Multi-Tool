@@ -25,5 +25,6 @@
 
 .default-checkbox:disabled {
   background-color: darkgrey;
+  border-color: darkgrey;
   opacity: 0.7;
 }
