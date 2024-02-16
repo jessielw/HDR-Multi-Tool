@@ -34,7 +34,7 @@ displayed in the log file as well as a prompt letting the user know something we
 
 Supports Windows and Linux.
 
-_Technically this will work om MacOS, I don't have a MacBook so cannot build and release, if someone is interested reach out_
+_Technically this will work on MacOS, I don't have a MacBook so cannot build and release, if someone is interested reach out_
 
 ### Requirements
 
