@@ -95,6 +95,7 @@ function resetGui() {
   cropSelections.forEach((cropSelection) => {
     cropSelection.value = 0;
   });
+  dvCropBox.checked = false;
 
   // fully default ui
   infoArea.innerText = "Open a Dolby Vision or HDR10+ compatible file";
@@ -280,6 +281,9 @@ function enableCropInputs(disabledStatus) {
       fixNegativeOffsets.checked = true;
     }
   });
+  ipcRenderer.invoke("get-negative-offset-bool").then((negativeOffsetBool) => {
+    fixNegativeOffsets.checked = negativeOffsetBool;
+  });
 }
 
 // ensure that the crop values are always at least 0
@@ -289,6 +293,11 @@ cropSelections.forEach((cropInput) => {
       cropInput.value = 0;
     }
   });
+});
+
+// update fix negative offset
+fixNegativeOffsets.addEventListener("change", function () {
+  ipcRenderer.send("update-negative-offset-bool", fixNegativeOffsets.checked);
 });
 
 async function enableDisableAddJob() {

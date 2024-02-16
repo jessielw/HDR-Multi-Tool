@@ -5,6 +5,7 @@ const {
   getPathObject,
   changeFileExtension,
 } = require("../../../app/main/fileUtils.js");
+const createConfigStore = require("../configUtils.js");
 
 ipcMain.handle("open-file", async (_, filePath) => {
   try {
@@ -70,6 +71,16 @@ ipcMain.on("show-message-prompt", (event, args) => {
     .then((response) => {
       event.reply("message-box-response", response);
     });
+});
+
+ipcMain.handle("get-negative-offset-bool", () => {
+  const store = createConfigStore();
+  return store.get("fixNegativeCrops");
+});
+
+ipcMain.on("update-negative-offset-bool", (_, arg) => {
+  const store = createConfigStore();
+  store.set("fixNegativeCrops", arg);
 });
 
 function showMessagePrompt(args, event) {
