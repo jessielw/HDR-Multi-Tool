@@ -4,17 +4,31 @@ A modern GUI to parse HDR10+ and Dolby Vision dynamic metadata for use with vide
 
 Supports **MKV, TS, MP4, and HEVC** as inputs right now. Please open an issue if there is any inputs that are not accepted that should be.
 
-Supports drag and drop in the input area.
+Supports drag and drop in the input area (Windows only).
 
 If you open a file that has both HDR10+ and Dolby Vision you will see dual option panels. Choose which you would
 like to extract and configure the settings. Everything else is handled for you.
 
-At the moment the only configurable options there is under options is to automatically start the job queue upon
-adding a job.
+#### Configuration
+
+Tools Menu options `Auto Start Queue` and `Clean Up`
+
+`Auto Start Queue`: This will automatically start the queue as soon as a job is added to it.
+
+`Clean Up`: This will clean up files left behind for Dolby Vision processing.
+
+#### Dolby Vision Cropping
+
+Now facilitates precise adjustment of Dolby Vision metadata offsets with cropping functionality. After initiating a Dolby Vision input, you can conveniently provide cropped values.
+
+`Fix Negative Offsets`: Enable this option to automatically reset offsets to zero if they would otherwise become negative due to user-defined crops. This feature mirrors the behavior of the `-c` switch in `dolby_tool`, ensuring consistent functionality for specific scenes while maintaining dynamic adjustment for others.
+
+If this is unchecked and there is negative offsets detected the job will error out and the error message will be
+displayed in the log file.
 
 #### Supported Operating Systems
 
-As of **v2.0** the app only **officially** supports **Windows** operating systems. I plan to add support for mac/linux in coming updates when I have time to test the configuration fully.
+Supports Windows and Linux.
 
 #### Note
 
