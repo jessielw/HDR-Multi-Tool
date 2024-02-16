@@ -77,13 +77,6 @@ let inputPath;
 let outputExt;
 let outputPath;
 
-// request current platform from main process
-let currentPlatform;
-ipcRenderer.invoke("get-operating-system").then((curPlatform) => {
-  // [darwin, win32, linux]
-  curPlatform = curPlatform;
-});
-
 function resetGui() {
   mediaInfoObject = undefined;
   fileSize = undefined;
@@ -382,7 +375,7 @@ ipcRenderer.on("return-open-dialog", (filePaths) => {
 });
 
 [openFileBtn, inputTextBox].forEach((dropArea) => {
-  if (currentPlatform != "win32") {
+  if (window.api.currentPlatform() != "win32") {
     return;
   }
   dropArea.addEventListener("dragover", (e) => {

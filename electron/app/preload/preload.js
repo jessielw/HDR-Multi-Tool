@@ -8,3 +8,7 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
     ipcRenderer.once(channel, (event, ...args) => func(...args)),
   invoke: (...args) => ipcRenderer.invoke(...args),
 });
+
+contextBridge.exposeInMainWorld("api", {
+  currentPlatform: () => process.platform,
+});
