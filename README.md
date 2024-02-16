@@ -30,6 +30,17 @@ displayed in the log file as well as a prompt letting the user know something we
 
 Supports Windows and Linux.
 
+#### Requirements
+
+[`dovi_tool`](https://github.com/quietvoid/dovi_tool): _minimum version is v2.1.0_
+
+[`hdr10plus_tool`](https://github.com/quietvoid/hdr10plus_tool)
+
+`ffmpeg`: A somewhat modern version
+
+**Note:** The program checks for these files on the system PATH first, so it will prioritize
+them over them being in a folder in the `apps` directory beside the executable.
+
 #### Note
 
 As of **v2.0** the tkinter version of the app has been dropped. I have no plans to update/maintain that version of the app. However, I will leave it on the repository in the "tkinter" folder.
