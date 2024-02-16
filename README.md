@@ -4,7 +4,7 @@ A modern GUI to parse HDR10+ and Dolby Vision dynamic metadata for use with vide
 
 Supports **MKV, TS, MP4, and HEVC** as inputs right now. Please open an issue if there is any inputs that are not accepted that should be.
 
-Supports drag and drop in the input area (Windows only).
+Supports drag and drop in the input area **(Windows only)**.
 
 If you open a file that has both HDR10+ and Dolby Vision you will see dual option panels. Choose which you would
 like to extract and configure the settings. Everything else is handled for you.
@@ -23,8 +23,8 @@ Now facilitates precise adjustment of Dolby Vision metadata offsets with croppin
 
 `Fix Negative Offsets`: Enable this option to automatically reset offsets to zero if they would otherwise become negative due to user-defined crops. This feature mirrors the behavior of the `-c` switch in `dolby_tool`, ensuring consistent functionality for specific scenes while maintaining dynamic adjustment for others.
 
-If this is unchecked and there is negative offsets detected the job will error out and the error message will be
-displayed in the log file.
+If this is unchecked and there is negative offsets detected, the job will error out and the error message will be
+displayed in the log file as well as a prompt letting the user know something went wrong.
 
 #### Supported Operating Systems
 
