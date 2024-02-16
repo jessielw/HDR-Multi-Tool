@@ -74,14 +74,13 @@
               <div id="dv-rpu-extract-mode" class="menu-div hdr-body-positioning">
                 <label for="rpu-extract-mode">RPU Extract Mode</label>
                 <select id="rpu-extract-mode" class="menu-selection" name="rpu-extract-mode">
-                  <option value="-m 2">Profile 8.1: Remove Mapping (Default)</option>
-                  <option value="-m 5">Profile 8.1: Preserves Mapping</option>
-                  <option value="-m 4">Profile 8.4</option>
-                  <option value="-m 1">MEL</option>
-                  <option value="-m 0">Untouched</option>
+                  <option value="2">Profile 8.1: Remove Mapping (Default)</option>
+                  <option value="5">Profile 8.1: Preserves Mapping</option>
+                  <option value="4">Profile 8.4</option>
+                  <option value="1">MEL</option>
+                  <option value="0">Untouched</option>
                 </select>
               </div>
-
 
               <div id="dv-hevc-nalu" class="menu-div hdr-body-positioning">
                 <label for="hevc-nalu">HEVC Nalu Start Code</label>
@@ -92,9 +91,38 @@
                 </select>
               </div>
 
-              <div id="dv-check-box-div-crop" class="check-button-div hdr-body-positioning">
-                <label for="dv-crop-box">Cropped Encode</label>
-                <input type="checkbox" id="dv-crop-box" class="default-checkbox" name="dv-crop-box" value="-c">
+              <div id="dv-crop-control-box" class="check-button-div hdr-body-positioning dv-cropped-box">
+                <div class="cropped-div">
+                  <label for="dv-crop-box-label">Cropped</label>
+                  <input type="checkbox" id="dv-crop-box" class="default-checkbox" name="dv-crop-box" value="-c">
+                </div>
+                <div class="cropped-content">
+                  <div class="x-crop">
+                    <label for="dv-top-crop">Top</label>
+                    <input type="number" class="crop-spin-box" id="dv-top-crop" name="dv-top-crop" value="0" min="0"
+                      max="99999999" disabled>
+                  </div>
+                  <div class="x-crop">
+                    <label for="dv-bottom-crop">Bottom</label>
+                    <input type="number" class="crop-spin-box" id="dv-bottom-crop" name="dv-bottom-crop" value="0"
+                      min="0" max="99999999" disabled>
+                  </div>
+                  <div class="x-crop">
+                    <label for="dv-left-crop">Left</label>
+                    <input type="number" class="crop-spin-box" id="dv-left-crop" name="dv-left-crop" value="0" min="0"
+                      max="99999999" disabled>
+                  </div>
+                  <div class="x-crop">
+                    <label for="dv-right-crop">Right</label>
+                    <input type="number" class="crop-spin-box" id="dv-right-crop" name="dv-right-crop" value="0" min="0"
+                      max="99999999" disabled>
+                  </div>
+                  <div class="fix-negative-offsets-div">
+                    <label for="fix-negative-offsets">Fix Negative Offsets</label>
+                    <input type="checkbox" id="fix-negative-offsets" class="default-checkbox"
+                      name="fix-negative-offsets" value="1" disabled>
+                  </div>
+                </div>
               </div>
 
             </div>

@@ -5,6 +5,7 @@ const baseDirectory = require("../../app/main/baseDirectory");
 // set config default options
 const defaultOptions = {
   autoStart: false,
+  cleanUp: true,
 };
 
 // Define a function that initializes and returns the store instance

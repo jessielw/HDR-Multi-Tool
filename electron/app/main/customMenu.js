@@ -4,8 +4,8 @@ const {
 } = require("../../app/main/ipc_handlers/ipcFileHandlers");
 const createConfigStore = require("../../app/main/configUtils.js");
 
-async function updateAutoStart(store, toggle) {
-  store.set("autoStart", toggle);
+async function updateConfigBool(store, toggle, key) {
+  store.set(key, toggle);
 }
 
 module.exports = (root) => {
@@ -46,7 +46,7 @@ module.exports = (root) => {
               type: "radio",
               checked: store.get("autoStart") ? true : false,
               click: async () => {
-                await updateAutoStart(store, true);
+                await updateConfigBool(store, true, "autoStart");
               },
             },
             {
@@ -54,7 +54,28 @@ module.exports = (root) => {
               type: "radio",
               checked: store.get("autoStart") ? false : true,
               click: async () => {
-                await updateAutoStart(store, false);
+                await updateConfigBool(store, false, "autoStart");
+              },
+            },
+          ],
+        },
+        {
+          label: "Clean Up",
+          submenu: [
+            {
+              label: "On",
+              type: "radio",
+              checked: store.get("cleanUp") ? true : false,
+              click: async () => {
+                await updateConfigBool(store, true, "cleanUp");
+              },
+            },
+            {
+              label: "Off",
+              type: "radio",
+              checked: store.get("cleanUp") ? false : true,
+              click: async () => {
+                await updateConfigBool(store, false, "cleanUp");
               },
             },
           ],
