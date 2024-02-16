@@ -1,4 +1,8 @@
-![image](https://github.com/jlw4049/HDR-Multi-Tool-Gui/assets/48299282/6f8920d0-64c2-408c-bc1f-0decb6783a45)
+[![04a_source__41230.png](https://thumbs2.imgbox.com/56/73/kifkH1E0_t.png)](https://imgbox.com/kifkH1E0)
+
+[![04a_source__41230.png](https://thumbs2.imgbox.com/0a/1a/Um5w9hAh_t.png)](https://imgbox.com/Um5w9hAh)
+
+[![04a_source__41230.png](https://thumbs2.imgbox.com/67/96/kIIaDLoF_t.png)](https://imgbox.com/kIIaDLoF)
 
 A modern GUI to parse HDR10+ and Dolby Vision dynamic metadata for use with video encoding.
 
