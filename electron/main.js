@@ -2,10 +2,6 @@ const { app, BrowserWindow, dialog } = require("electron");
 const path = require("path");
 const { checkDependencies } = require("./app/main/detectFilePaths.js");
 const createLogDir = require("./app/main/createDirectories.js");
-const os = require("os");
-
-// get the operating system [darwin, win32, linux]
-const curPlatform = os.platform();
 
 // keep a global variable for root
 let root;

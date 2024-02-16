@@ -1,4 +1,5 @@
 const { ipcMain, dialog } = require("electron");
+const os = require("os");
 const parseMediaInfo = require("../../../app/main/mediaInfoParser.js");
 const { toolPathObject } = require("../../../app/main/detectFilePaths.js");
 const {
@@ -6,6 +7,10 @@ const {
   changeFileExtension,
 } = require("../../../app/main/fileUtils.js");
 const createConfigStore = require("../configUtils.js");
+
+ipcMain.handle("get-operating-system", () => {
+  return os.platform();
+});
 
 ipcMain.handle("open-file", async (_, filePath) => {
   try {
