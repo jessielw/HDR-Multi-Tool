@@ -8,6 +8,10 @@ async function updateAutoStart(store, toggle) {
   store.set("autoStart", toggle);
 }
 
+async function updateCleanUp(store, toggle) {
+  store.set("cleanUp", toggle);
+}
+
 module.exports = (root) => {
   const store = createConfigStore();
 
@@ -55,6 +59,27 @@ module.exports = (root) => {
               checked: store.get("autoStart") ? false : true,
               click: async () => {
                 await updateAutoStart(store, false);
+              },
+            },
+          ],
+        },
+        {
+          label: "Clean Up",
+          submenu: [
+            {
+              label: "On",
+              type: "radio",
+              checked: store.get("cleanUp") ? true : false,
+              click: async () => {
+                await updateCleanUp(store, true);
+              },
+            },
+            {
+              label: "Off",
+              type: "radio",
+              checked: store.get("cleanUp") ? false : true,
+              click: async () => {
+                await updateCleanUp(store, false);
               },
             },
           ],
