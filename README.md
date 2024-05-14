@@ -49,4 +49,4 @@ them over them being in a folder in the `apps` directory beside the executable.
 
 ### Note
 
-As of **v2.0** the tkinter version of the app has been dropped. I have no plans to update/maintain that version of the app. However, I will leave it on the repository in the "tkinter" folder.
+As of **v2.0** the tkinter version of the app has been dropped. I have no plans to update/maintain that version of the app. However, I will leave it on the repository in the branch `old_tkinter` inside of the `tkinter` folder.
